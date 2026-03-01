@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
+use App\Models\Role;
 use Illuminate\Http\Request;
 
 class RoleController extends Controller
@@ -12,7 +13,15 @@ class RoleController extends Controller
      */
     public function index()
     {
-        //
+        $roles = Role::from('roles as r')
+            ->select('r.id', 'r.name')
+            ->orderBy('r.id', 'desc')
+            ->get();
+
+        return response()->json([
+            'success' => true,
+            'data' => $roles
+        ], 200);
     }
 
     /**

@@ -15,7 +15,7 @@ class UserController extends Controller
             ->select('u.id', 'u.name', 'u.email', 'u.phone', 'r.name as role')
             ->join('roles as r', 'u.role_id', '=', 'r.id')
             ->orderBy('u.id', 'desc')
-            ->get();
+            ->paginate(10); // <-- 10 users per page
 
         return response()->json([
             'success' => true,
@@ -31,13 +31,15 @@ class UserController extends Controller
         $validatedData = $request->validate([
             'name'       => 'required|min:2|max:20',
             'email'      => ['required', 'email', 'unique:users'],
-            'password'   => ['required', 'min:6', 'confirmed'],
+            // 'password'   => ['required', 'min:6', 'confirmed'],
             'role_id'    => ['required', 'exists:roles,id'], // Good practice to verify role exists
+            'phone'      => 'nullable|string|max:20',
         ]);
 
         // 3. User Creation
         $user = User::create([
-            'name' => $validatedData['name'],
+            
+            'name'          => $validatedData['name'],
             'email'      => $validatedData['email'],
             'phone'      => $request->phone,
             'password'   => Hash::make($request->password), // Always hash your passwords!
@@ -55,7 +57,7 @@ class UserController extends Controller
     {
         $request->validate([
             'name'    => 'required|min:2|max:50',
-            'phone'   => 'required|min:10',
+            // 'phone'   => 'required|min:10',
             'role_id' => 'required|exists:roles,id'
         ]);
 
@@ -66,7 +68,7 @@ class UserController extends Controller
         }
         $user->update([
             'name' => $request->name,
-            'phone' => $request->phone,
+            // 'phone' => $request->phone,
             'role_id' => $request->role_id
         ]);
         return response()->json([
@@ -98,4 +100,24 @@ class UserController extends Controller
             'message' => 'User deleted successfully'
         ], 200);
     }
+    public function show($id)
+{
+    // ১. আইডি অনুযায়ী ইউজার খুঁজে বের করা
+    $user = User::find($id);
+
+    // ২. যদি ইউজার না পাওয়া যায় তবে ৪0৪ এরর পাঠানো
+    if (!$user) {
+        return response()->json([
+            'status'  => 'error',
+            'message' => 'User not found'
+        ], 404);
+    }
+
+    // ৩. সাকসেস রেসপন্স (রিসোর্স ব্যবহার করে)
+    return response()->json([
+        'status'  => 'success',
+        'message' => 'User details retrieved successfully',
+        'data'    => $user
+    ], 200);
+}
 }

@@ -3,7 +3,9 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
+use App\Models\Role;
 use Illuminate\Foundation\Auth\User;
 
 //=====this route is test route when command php artisan install:api====
@@ -25,8 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // ইউজার লিস্ট দেখার জন্য
     Route::get('/users', [UserController::class, 'index']);
     Route::post('/users', [UserController::class, 'store']);
+    Route::get('/users/{id}', [UserController::class, 'show']);
     Route::patch('/users/{id}', [UserController::class, 'update']);
     Route::delete('/users/{id}', [UserController::class, 'destroy']);
+
+    //role api
+    Route::get('/roles', [RoleController::class, 'index']);
 
     // লগআউট রাউট
     Route::post('/logout', [AuthController::class, 'logout']);
