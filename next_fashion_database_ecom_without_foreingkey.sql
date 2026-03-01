@@ -1,0 +1,1 @@
+d:\all_projects\Ecommerce_project\ecommerce-lara-api\next_fashion_database_ecom_without_foreingkey.sql
