@@ -47,7 +47,7 @@ CREATE TABLE product_statuses (
 -- ==============================
 CREATE TABLE categories (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    parent_id INT DEFAULT NULL,
+    brand_id INT DEFAULT NULL,
     name VARCHAR(100),
     slug VARCHAR(150) UNIQUE,
     status_id INT

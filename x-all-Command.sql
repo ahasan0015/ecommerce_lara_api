@@ -1,0 +1,1 @@
+php artisan storage:link  --to desplay laravel image in display forntend
