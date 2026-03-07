@@ -7,6 +7,7 @@ use App\Http\Controllers\Api\AuthController;
 
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\UserController;
 use App\Models\Role;
@@ -53,4 +54,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('brands', BrandController::class);
     // ড্রপডাউনের জন্য আলাদা রাউট
     Route::get('product-statuses', [BrandController::class, 'getStatuses']);
+
+    //products
+    Route::apiResource('products', ProductController::class);
+    // Route::get('/products', [ProductController::class, 'index']);
+
 });

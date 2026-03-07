@@ -2,28 +2,19 @@
 
 namespace App\Models;
 
-use App\Http\Controllers\Api\BrandController;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Product;
 
 class Brand extends Model
 {
-    protected $fillable = [
-        'name',
-        'logo',
-        'status_id'
-    ];
+    use HasFactory;
 
-    /**
-     * রিলেশনশিপ: এই ব্র্যান্ডের আন্ডারে কতগুলো প্রোডাক্ট আছে
-     */
-    // public function categories()
-    // {
-    //     return $this->hasMany(Category::class, 'brand_id');
-    // }
+    protected $fillable = ['name', 'logo', 'status_id'];
 
-    // public function status()
-    // {
-    //     // আপনার স্কিমা অনুযায়ী product_statuses টেবিলের সাথে সম্পর্ক
-    //     return $this->belongsTo(ProductStatus::class, 'status_id');
-    // }
+    // Brand has many Products
+    public function products()
+    {
+        return $this->hasMany(Product::class);
+    }
 }

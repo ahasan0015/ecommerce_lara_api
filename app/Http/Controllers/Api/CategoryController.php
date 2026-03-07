@@ -11,16 +11,15 @@ use Illuminate\Support\Facades\Validator;
 class CategoryController extends Controller
 {
     /**
-     * ১. সব ক্যাটাগরি দেখা (Brand এবং Status নামসহ)
+     * 1. Display all categories with Status name only
      */
     public function index()
     {
         $categories = DB::table('categories')
-            ->leftJoin('brands', 'categories.brand_id', '=', 'brands.id')
+            // Joining only with product_statuses
             ->leftJoin('product_statuses', 'categories.status_id', '=', 'product_statuses.id')
             ->select(
                 'categories.*',
-                'brands.name as brand_name',
                 'product_statuses.name as status_name'
             )
             ->orderBy('categories.id', 'desc')
@@ -33,42 +32,35 @@ class CategoryController extends Controller
     }
 
     /**
-     * ২. নতুন ক্যাটাগরি তৈরি (অটো স্লাগসহ)
-     */
-    /**
-     * নতুন ক্যাটাগরি সেভ করা
+     * 2. Store a new category (No Brand)
      */
     public function store(Request $request)
     {
-        // ১. নামের ওপর ভিত্তি করে স্লাগ তৈরি এবং রিকোয়েস্টে যোগ করা
         $slug = Str::slug($request->name);
         $request->merge(['slug' => $slug]);
 
-        // ২. প্রফেশনাল ভ্যালিডেশন
         $validator = Validator::make($request->all(), [
             'name'      => 'required|string|max:100',
-            'slug'      => 'required|unique:categories,slug', // স্লাগ ইউনিক হওয়া বাধ্যতামূলক
-            'brand_id'  => 'nullable|exists:brands,id',
-            'status_id' => 'required|integer'
+            'slug'      => 'required|unique:categories,slug',
+            'status_id' => 'required|exists:product_statuses,id' 
         ], [
-            'name.required' => 'Category name is mandatory.',
-            'slug.unique'   => 'This category name/slug is already taken.'
+            'name.required' => 'Category name is required.',
+            'slug.unique'   => 'This category name already exists.',
+            'status_id.exists' => 'The selected status is invalid.'
         ]);
 
         if ($validator->fails()) {
             return response()->json([
-                'success' => false, // রিয়্যাক্ট এই কী-টি চেক করবে
+                'success' => false,
                 'errors'  => $validator->errors()
             ], 422);
         }
 
-        // ৩. ডাটাবেস ট্রানজ্যাকশন (নিরাপদ ইনসার্ট)
         return DB::transaction(function () use ($request, $slug) {
             try {
                 $id = DB::table('categories')->insertGetId([
                     'name'       => $request->name,
                     'slug'       => $slug,
-                    'brand_id'   => $request->brand_id,
                     'status_id'  => $request->status_id,
                     'created_at' => now(),
                     'updated_at' => now()
@@ -89,48 +81,60 @@ class CategoryController extends Controller
     }
 
     /**
-     * ৩. নির্দিষ্ট ক্যাটাগরির তথ্য দেখা
+     * 3. Show specific category
      */
     public function show($id)
     {
         $category = DB::table('categories')->where('id', $id)->first();
+        
         if (!$category) {
-            return response()->json(['message' => 'Category not found'], 404);
+            return response()->json([
+                'success' => false,
+                'message' => 'Category not found'
+            ], 404);
         }
-        return response()->json($category, 200);
+
+        return response()->json([
+            'success' => true,
+            'data' => $category
+        ]);
     }
 
     /**
-     * ৪. ক্যাটাগরি আপডেট করা
+     * 4. Update category (No Brand)
      */
     public function update(Request $request, $id)
     {
-        $category = DB::table('categories')->where('id', $id)->first();
-        if (!$category) return response()->json(['message' => 'Category not found'], 404);
+        $slug = Str::slug($request->name);
 
         $validator = Validator::make($request->all(), [
-            'name' => 'required|max:100',
-            'brand_id' => 'nullable|exists:brands,id',
+            'name'      => 'required|max:100',
+            'slug'      => 'required|unique:categories,slug,' . $id,
             'status_id' => 'required|exists:product_statuses,id'
         ]);
 
         if ($validator->fails()) {
-            return response()->json($validator->errors(), 422);
+            return response()->json([
+                'success' => false,
+                'errors' => $validator->errors()
+            ], 422);
         }
 
         DB::table('categories')->where('id', $id)->update([
-            'name' => $request->name,
-            'slug' => Str::slug($request->name),
-            'brand_id' => $request->brand_id,
-            'status_id' => $request->status_id,
+            'name'       => $request->name,
+            'slug'       => $slug,
+            'status_id'  => $request->status_id,
             'updated_at' => now()
         ]);
 
-        return response()->json(['message' => 'Category updated successfully!'], 200);
+        return response()->json([
+            'success' => true, 
+            'message' => 'Category updated successfully!'
+        ]);
     }
 
     /**
-     * ৫. ক্যাটাগরি ডিলিট করা
+     * 5. Delete category
      */
     public function destroy($id)
     {
@@ -138,13 +142,13 @@ class CategoryController extends Controller
 
         if ($deleted) {
             return response()->json([
-                'success' => true, // এই লাইনটি যোগ করুন
+                'success' => true,
                 'message' => 'Category deleted successfully'
             ], 200);
         }
 
         return response()->json([
-            'success' => false, // এই লাইনটি যোগ করুন
+            'success' => false,
             'message' => 'Category not found'
         ], 404);
     }
