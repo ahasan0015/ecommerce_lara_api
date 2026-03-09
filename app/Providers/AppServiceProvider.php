@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
 class AppServiceProvider extends ServiceProvider
@@ -19,6 +20,7 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        // লারাভেলকে বলা হচ্ছে পাজিনেশনের জন্য বুটস্ট্র্যাপ ৫ এর স্টাইল ব্যবহার করতে
+        Paginator::useBootstrapFive();
     }
 }
