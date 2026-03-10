@@ -7,8 +7,10 @@ use App\Http\Controllers\Api\AuthController;
 
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
+use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UserController;
 use App\Models\Role;
 use Illuminate\Foundation\Auth\User;
@@ -57,6 +59,8 @@ Route::middleware('auth:sanctum')->group(function () {
 
     //products
     Route::apiResource('products', ProductController::class);
-    // Route::get('/products', [ProductController::class, 'index']);
 
+
+    Route::apiResource('colors', ColorController::class);
+    Route::apiResource('sizes', SizeController::class);
 });
