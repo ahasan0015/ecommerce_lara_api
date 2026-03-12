@@ -1,6 +1,7 @@
 <?php
 
 
+use App\Http\Controllers\Api\ProductVariantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
@@ -22,7 +23,7 @@ use Illuminate\Foundation\Auth\User;
 // })->middleware('auth:sanctum');
 
 Route::post('/register', [AuthController::class, 'register']);
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/admin/login', [AuthController::class, 'login']);
 
 
 // ২. প্রোটেক্টেড রাউট (যেগুলো টোকেন ছাড়া কাজ করবে না)
@@ -63,4 +64,24 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
+    // Product Variant Routes
+    // --- Product Variant Routes ---
+    Route::prefix('variants')->group(function () {
+        
+        // নির্দিষ্ট প্রোডাক্টের সব ভ্যারিয়েন্ট ফেচ করা
+        // GET /api/variants/product/5
+        Route::get('/product/{id}', [ProductVariantController::class, 'getProductVariants']);
+
+        // Bulk Variant জেনারেট করা
+        // POST /api/variants/bulk-store
+        Route::post('/bulk-store', [ProductVariantController::class, 'storeBulkVariants']);
+
+        // ইনলাইন স্টক আপডেট করা
+        // PATCH /api/variants/10/update-stock
+        Route::patch('/{id}/update-stock', [ProductVariantController::class, 'updateStock']);
+
+        // ভ্যারিয়েন্ট ডিলিট করা
+        // DELETE /api/variants/10
+        Route::delete('/{id}', [ProductVariantController::class, 'destroy']);
+    });
 });

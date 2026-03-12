@@ -5,7 +5,9 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Product;
+use App\Models\ProductImage;
 use App\Models\ProductStatus;
+use App\Models\ProductVariant;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
@@ -32,6 +34,73 @@ class ProductController extends Controller
         ]);
     }
 
+    //======updated controller to insert data to multiple table to create product========
+    public function store(Request $request)
+    {
+        // ১. ভ্যালিডেশন
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'category_id' => 'required|integer',
+            'brand_id'    => 'required|integer',
+            'status_id'   => 'required|integer',
+            'description' => 'nullable|string',
+            'variants'    => 'required|array|min:1',
+        ]);
+
+        try {
+            // ২. ট্রানজ্যাকশন শুরু
+            return DB::transaction(function () use ($request) {
+
+                // ৩. মেইন প্রোডাক্ট সেভ করা
+                $product = Product::create([
+                    'name'        => $request->name,
+                    'slug'        => Str::slug($request->name) . '-' . time(),
+                    'description' => $request->description,
+                    'category_id' => $request->category_id,
+                    'brand_id'    => $request->brand_id,
+                    'status_id'   => $request->status_id,
+                ]);
+
+                // ৪. ভেরিয়েন্ট লুপ চালানো (Step 3 এর ডাটা)
+                foreach ($request->variants as $variantData) {
+                    $variant = ProductVariant::create([
+                        'product_id' => $product->id,
+                        'color_id'   => $variantData['color_id'] ?? null,
+                        'size_id'    => $variantData['size_id'] ?? null,
+                        'sku'        => $variantData['sku'],
+                        'price'      => $variantData['price'],
+                        'stock'      => $variantData['stock'],
+                    ]);
+
+                    // ৫. ইমেজ হ্যান্ডলিং (Step 4 এর ডাটা)
+                    // রিঅ্যাক্ট থেকে যদি 'variant_images' নামে ফাইল পাঠানো হয়
+                    if ($request->hasFile("images.{$variantData['id']}")) {
+                        foreach ($request->file("images.{$variantData['id']}") as $file) {
+                            $path = $file->store('products/variants', 'public');
+
+                            ProductImage::create([
+                                'variant_id' => $variant->id,
+                                'image_path' => $path,
+                                'is_main'    => false,
+                            ]);
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product published successfully!',
+                    'id'      => $product->id
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to save product.',
+                'error'   => $e->getMessage()
+            ], 500);
+        }
+    }
 
     // {
     //     $products = DB::table('products')
@@ -55,89 +124,7 @@ class ProductController extends Controller
 
     //update Store product method upload and convert imgae size 
 
-    public function store(Request $request)
-    {
-        // ১. স্লাগ তৈরি
-        $slug = Str::slug($request->name);
 
-        // ২. ভ্যালিডেশন
-        $validator = Validator::make($request->all(), [
-            'category_id' => 'required|exists:categories,id',
-            'brand_id'    => 'required|exists:brands,id',
-            'status_id'   => 'required|exists:product_statuses,id',
-            'name'        => 'required|string|max:200',
-            'base_price'  => 'required|numeric|min:0',
-            'description' => 'nullable|string',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120' // ৫ এমবি পর্যন্ত অনুমতি
-        ]);
-
-        if ($validator->fails()) {
-            return response()->json([
-                'success' => false,
-                'errors' => $validator->errors()
-            ], 422);
-        }
-
-        // ৩. ডাটাবেজ ট্রানজ্যাকশন শুরু
-        return DB::transaction(function () use ($request, $slug) {
-            try {
-                $imagePath = null;
-
-                // ৪. ইমেজ প্রসেসিং (যদি ফাইল থাকে)
-                if ($request->hasFile('image')) {
-                    $file = $request->file('image');
-                    $fileName = time() . '_' . Str::random(10) . '.webp';
-                    $folder = 'products';
-
-                    // স্টোরেজ চেক
-                    if (!Storage::disk('public')->exists($folder)) {
-                        Storage::disk('public')->makeDirectory($folder);
-                    }
-
-                    // Intervention Image v3 লজিক (Laravel 12 Friendly)
-                    $manager = new ImageManager(new Driver()); // GD Driver
-                    $image = $manager->read($file);
-
-                    // ১২০০x১২০০ রিসাইজ ও স্কয়ার প্যাডিং
-                    $image->scaleDown(width: 1200);
-                    $image->pad(1200, 1200, '#ffffff'); // খালি জায়গায় সাদা ব্যাকগ্রাউন্ড
-
-                    // WebP ফরম্যাটে ৮% কোয়ালিটিতে কনভার্ট
-                    $encoded = $image->toWebp(80);
-
-                    // স্টোরেজে সেভ
-                    $imagePath = $folder . '/' . $fileName;
-                    Storage::disk('public')->put($imagePath, (string) $encoded);
-                }
-
-                // ৫. ডাটাবেজে প্রোডাক্ট তৈরি
-                $product = Product::create([
-                    'category_id' => $request->category_id,
-                    'brand_id'    => $request->brand_id,
-                    'status_id'   => $request->status_id,
-                    'name'        => $request->name,
-                    'slug'        => $slug . '-' . time(), // ইউনিক স্লাগ
-                    'description' => $request->description,
-                    'base_price'  => $request->base_price,
-                    'image'       => $imagePath,
-                ]);
-
-                return response()->json([
-                    'success' => true,
-                    'message' => 'Product created with 1200x1200px optimized image!',
-                    'data'    => $product
-                ], 201);
-            } catch (\Exception $e) {
-                // এরর হলে লগ এ সেভ হবে
-                Log::error("Product Store Error: " . $e->getMessage());
-
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Failed to store product: ' . $e->getMessage()
-                ], 500);
-            }
-        });
-    }
     // Store Product
     // public function store(Request $request)
     // {

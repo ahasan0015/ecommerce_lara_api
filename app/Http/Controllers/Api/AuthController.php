@@ -30,40 +30,36 @@ class AuthController extends Controller
         ], 201);
     }
 
-    public function login(Request $request)
-    {
-        // 1️⃣ Validate
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required'
-        ]);
+   public function login(Request $request)
+{
+    $request->validate([
+        'email' => 'required|email',
+        'password' => 'required'
+    ]);
 
-        // 2️⃣ Find user by email
-        $user = User::where('email', $request->email)->first();
+    $user = User::where('email', $request->email)->first();
 
-        // 3️⃣ Check user exists
-        if (!$user) {
-            return response()->json([
-                'message' => 'User not found'
-            ], 404);
-        }
-
-        // 4️⃣ Check password
-        if (!Hash::check($request->password, $user->password)) {
-            return response()->json([
-                'message' => 'Invalid password'
-            ], 401);
-        }
-
-        // 5️⃣ Create token (Sanctum)
-        $token = $user->createToken('auth_token')->plainTextToken;
-
+    if (!$user || !Hash::check($request->password, $user->password)) {
         return response()->json([
-            'success' => 'Login successful',
-            'token' => $token,
-            'user' => $user
-        ], 200);
+            'message' => 'Invalid credentials'
+        ], 401);
     }
+
+    $token = $user->createToken('auth_token')->plainTextToken;
+
+    return response()->json([
+        'success' => true, // এখানে string এর বদলে boolean পাঠানো ভালো
+        'token' => $token,
+        'user' => [
+            'id' => $user->id,
+            'name' => $user->name,
+            'email' => $user->email,
+            'role' => $user->role_id, // যদি কলাম খালি থাকে তবে ডিফল্ট manager হিসেবে যাবে
+        ]
+    ], 200);
+}
+
+
      public function logout(Request $request){
         $request->user()->currentAccessToken()->delete();
         // auth()->user()->tokens()->delete();
