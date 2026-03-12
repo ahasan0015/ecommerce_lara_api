@@ -19,7 +19,7 @@ return new class extends Migration
             $table->unsignedBigInteger('status_id')->default(1); // ভেরিয়েন্ট স্ট্যাটাস (Active/Inactive)
 
             $table->string('sku')->unique();
-            $table->decimal('price', 10, 2)->default(0.00); // ভেরিয়েন্ট প্রাইস
+            $table->decimal('sale_price', 10, 2)->default(0.00); // ভেরিয়েন্ট প্রাইস
             $table->integer('stock')->default(0);           // ভেরিয়েন্ট স্টক
 
             $table->timestamps();
