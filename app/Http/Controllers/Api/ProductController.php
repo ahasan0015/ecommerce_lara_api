@@ -101,6 +101,7 @@ class ProductController extends Controller
 
             'variants' => 'required|array|min:1',
             'variants.*.sku' => 'required|string',
+            'variants.*.status_id' => 'required|integer',
             'variants.*.sale_price' => 'required|numeric',
             'variants.*.stock' => 'required|integer',
         ]);
@@ -115,6 +116,7 @@ class ProductController extends Controller
                 'category_id' => $request->category_id,
                 'brand_id'    => $request->brand_id,
                 'status_id'   => $request->status_id,
+                'base_price'   => $request->base_price,
                 'created_at'  => now(),
                 'updated_at'  => now(),
             ]);
@@ -127,6 +129,7 @@ class ProductController extends Controller
                     'color_id'   => $variantData['color_id'] ?? null,
                     'size_id'    => $variantData['size_id'] ?? null,
                     'sku'        => $variantData['sku'],
+                    'status_id'  => $variantData['status_id'],
                     'sale_price' => $variantData['sale_price'],
                     'stock'      => $variantData['stock'],
                     'created_at' => now(),
@@ -146,8 +149,8 @@ class ProductController extends Controller
                         $path = $file->storeAs('products/variants', $filename, 'public');
 
                         DB::table('product_images')->insert([
-                            'variant_id' => $variantId,
-                            'image_path' => $path,
+                            'product_variant_id' => $variantId,
+                            'image' => $path,
                             'is_main'    => 0,
                             'created_at' => now(),
                             'updated_at' => now(),

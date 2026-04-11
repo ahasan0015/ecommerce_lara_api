@@ -112,7 +112,7 @@ CREATE TABLE product_variants (
     size_id INT,
     color_id INT,
     status_id INT,
-    price DECIMAL(10,2),
+    sale_price DECIMAL(10,2),
     sku VARCHAR(100) UNIQUE,
     stock INT DEFAULT 0
 );
@@ -241,7 +241,7 @@ CREATE TABLE reviews (
     status_id INT,
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
-
+-- ======updated database===========
 -- ==============================
 -- DATABASE
 -- ==============================
