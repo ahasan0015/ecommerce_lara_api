@@ -326,6 +326,7 @@ class ProductController extends Controller
     public function show($id)
     {
         return Product::with('brand', 'category', 'status')->findOrFail($id);
+        
     }
     //Update product Update method 
     public function update(Request $request, $id)
