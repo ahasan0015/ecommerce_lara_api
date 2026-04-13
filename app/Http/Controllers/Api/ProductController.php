@@ -90,243 +90,175 @@ class ProductController extends Controller
 
 
     //======store method using DB::table=========
-    public function store(Request $request)
-    {
-        $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|integer',
-            'brand_id'    => 'required|integer',
-            'status_id'   => 'required|integer',
-            'description' => 'nullable|string',
-
-            'variants' => 'required|array|min:1',
-            'variants.*.sku' => 'required|string',
-            'variants.*.status_id' => 'required|integer',
-            'variants.*.sale_price' => 'required|numeric',
-            'variants.*.stock' => 'required|integer',
-        ]);
-
-        return DB::transaction(function () use ($request) {
-
-            // 1️⃣ Insert Product
-            $productId = DB::table('products')->insertGetId([
-                'name'        => $request->name,
-                'slug'        => Str::slug($request->name) . '-' . time(),
-                'description' => $request->description,
-                'category_id' => $request->category_id,
-                'brand_id'    => $request->brand_id,
-                'status_id'   => $request->status_id,
-                'base_price'   => $request->base_price,
-                'created_at'  => now(),
-                'updated_at'  => now(),
-            ]);
-
-            // 2️⃣ Insert Variants
-            foreach ($request->variants as $index => $variantData) {
-
-                $variantId = DB::table('product_variants')->insertGetId([
-                    'product_id' => $productId,
-                    'color_id'   => $variantData['color_id'] ?? null,
-                    'size_id'    => $variantData['size_id'] ?? null,
-                    'sku'        => $variantData['sku'],
-                    'status_id'  => $variantData['status_id'],
-                    'sale_price' => $variantData['sale_price'],
-                    'stock'      => $variantData['stock'],
-                    'created_at' => now(),
-                    'updated_at' => now(),
-                ]);
-
-                // 3️⃣ Insert Variant Images
-                if ($request->hasFile("images.$index")) {
-
-                    foreach ($request->file("images.$index") as $file) {
-
-                        $filename = Str::slug($request->name)
-                            . '-' . time()
-                            . rand(100, 999)
-                            . '.' . $file->getClientOriginalExtension();
-
-                        $path = $file->storeAs('products/variants', $filename, 'public');
-
-                        DB::table('product_images')->insert([
-                            'product_variant_id' => $variantId,
-                            'image' => $path,
-                            'is_main'    => 0,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ]);
-                    }
-                }
-            }
-
-            return response()->json([
-                'success' => true,
-                'message' => 'Product created successfully',
-                'product_id' => $productId
-            ], 201);
-        });
-    }
-
-    //======updated controller to insert data to multiple table to create product========
     // public function store(Request $request)
     // {
-    //     // ১. ভ্যালিডেশন
     //     $request->validate([
     //         'name'        => 'required|string|max:255',
     //         'category_id' => 'required|integer',
     //         'brand_id'    => 'required|integer',
     //         'status_id'   => 'required|integer',
     //         'description' => 'nullable|string',
-    //         'variants'    => 'required|array|min:1',
+
+    //         'variants' => 'required|array|min:1',
+    //         'variants.*.sku' => 'required|string',
+    //         'variants.*.status_id' => 'required|integer',
+    //         'variants.*.sale_price' => 'required|numeric',
+    //         'variants.*.stock' => 'required|integer',
+    //         'variants.*.images'   => 'nullable|array',
+    //         'variants.*.images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
     //     ]);
 
-    //     try {
-    //         // ২. ট্রানজ্যাকশন শুরু
-    //         return DB::transaction(function () use ($request) {
+    //     return DB::transaction(function () use ($request) {
 
-    //             // ৩. মেইন প্রোডাক্ট সেভ করা
-    //             $product = Product::create([
-    //                 'name'        => $request->name,
-    //                 'slug'        => Str::slug($request->name) . '-' . time(),
-    //                 'description' => $request->description,
-    //                 'category_id' => $request->category_id,
-    //                 'brand_id'    => $request->brand_id,
-    //                 'status_id'   => $request->status_id,
+    //         // 1️⃣ Insert Product
+    //         $productId = DB::table('products')->insertGetId([
+    //             'name'        => $request->name,
+    //             'slug'        => Str::slug($request->name) . '-' . time(),
+    //             'description' => $request->description,
+    //             'category_id' => $request->category_id,
+    //             'brand_id'    => $request->brand_id,
+    //             'status_id'   => $request->status_id,
+    //             'base_price'   => $request->base_price,
+    //             'created_at'  => now(),
+    //             'updated_at'  => now(),
+    //         ]);
+
+    //         // 2️⃣ Insert Variants
+    //         foreach ($request->variants as $index => $variantData) {
+
+    //             $variantId = DB::table('product_variants')->insertGetId([
+    //                 'product_id' => $productId,
+    //                 'color_id'   => $variantData['color_id'] ?? null,
+    //                 'size_id'    => $variantData['size_id'] ?? null,
+    //                 'sku'        => $variantData['sku'],
+    //                 'status_id'  => $variantData['status_id'],
+    //                 'sale_price' => $variantData['sale_price'],
+    //                 'stock'      => $variantData['stock'],
+    //                 'created_at' => now(),
+    //                 'updated_at' => now(),
     //             ]);
 
-    //             // ৪. ভেরিয়েন্ট লুপ চালানো (Step 3 এর ডাটা)
-    //             foreach ($request->variants as $variantData) {
-    //                 $variant = ProductVariant::create([
-    //                     'product_id' => $product->id,
-    //                     'color_id'   => $variantData['color_id'] ?? null,
-    //                     'size_id'    => $variantData['size_id'] ?? null,
-    //                     'sku'        => $variantData['sku'],
-    //                     'sale_price'      => $variantData['sale_price'],
-    //                     'stock'      => $variantData['stock'],
-    //                 ]);
+    //             // 3️⃣ Insert Variant Images
 
-    //                 // ৫. ইমেজ হ্যান্ডলিং (Step 4 এর ডাটা)
-    //                 // রিঅ্যাক্ট থেকে যদি 'variant_images' নামে ফাইল পাঠানো হয়
-    //                 if ($request->hasFile("images.{$variantData['id']}")) {
-    //                     foreach ($request->file("images.{$variantData['id']}") as $file) {
-    //                         $path = $file->store('products/variants', 'public');
+    //             if ($request->hasFile("variants.{$index}.images")) {
+    //                 $files = $request->file("variants.{$index}.images");
 
-    //                         ProductImage::create([
-    //                             'variant_id' => $variant->id,
-    //                             'image_path' => $path,
-    //                             'is_main'    => false,
+    //                 foreach ($files as $file) {
+    //                     if ($file->isValid()) {
+    //                         // ফাইলের নাম ইউনিক করা (uniqid ব্যবহার করা হয়েছে যাতে ওভাররাইট না হয়)
+    //                         $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+    //                         // স্টোরেজে সেভ করা
+    //                         $path = $file->storeAs('products/variants', $filename, 'public');
+
+    //                         // ডাটাবেজে ইনসার্ট
+    //                         DB::table('product_images')->insert([
+    //                             'product_variant_id' => $variantId,
+    //                             'image'              => $path,
+    //                             'is_main'            => 0,
+    //                             'created_at'         => now(),
+    //                             'updated_at'         => now(),
     //                         ]);
     //                     }
     //                 }
     //             }
-
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'message' => 'Product published successfully!',
-    //                 'id'      => $product->id
-    //             ], 201);
-    //         });
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'message' => 'Failed to save product.',
-    //             'error'   => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
-
-    // {
-    //     $products = DB::table('products')
-    //         ->join('brands', 'products.brand_id', '=', 'brands.id')
-    //         ->join('categories', 'products.category_id', '=', 'categories.id')
-    //         ->join('product_status', 'products.status_id', '=', 'product_status.id')
-    //         ->select(
-    //             'products.*',
-    //             'brands.name as brand_name',
-    //             'categories.name as category_name',
-    //             'product_status.name as status_name'
-    //         )
-    //         ->paginate(10);
-
-    //     return response()->json([
-    //         'success' => true,
-    //         'data' => $products
-    //     ]);
-    // }
-
-
-    //update Store product method upload and convert imgae size 
-
-
-    // Store Product
-    // public function store(Request $request)
-    // {
-
-    //     // ১. স্লাগ তৈরি
-    //     $slug = Str::slug($request->name);
-    //     $request->merge(['slug' => $slug]);
-
-    //     // ২. ভ্যালিডেশন (এখানে 'image' যোগ করা হয়েছে)
-    //     $validator = Validator::make($request->all(), [
-    //         'category_id' => 'required|exists:categories,id',
-    //         'brand_id'    => 'required|exists:brands,id',
-    //         'status_id'   => 'required|exists:product_statuses,id',
-    //         'name'        => 'required|string|max:200',
-    //         'slug'        => 'required|unique:products,slug',
-    //         'base_price'  => 'required|numeric|min:0',
-    //         'description' => 'nullable|string',
-    //         'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048' // ইমেজের ভ্যালিডেশন
-    //     ]);
-
-    //     if ($validator->fails()) {
-    //         return response()->json([
-    //             'success' => false,
-    //             'errors'  => $validator->errors()
-    //         ], 422);
-    //     }
-
-    //     // ৩. ট্রানজ্যাকশন ও ডাটা সেভ
-    //     return DB::transaction(function () use ($request) {
-    //         try {
-    //             // ইমেজ আপলোড লজিক
-    //             $imagePath = null;
-    //             if ($request->hasFile('image')) {
-    //                 // 'public/uploads/products' ফোল্ডারে সেভ হবে
-    //                 $imagePath = $request->file('image')->store('products', 'public');
-    //             }
-
-    //             $product = Product::create([
-    //                 'category_id' => $request->category_id,
-    //                 'brand_id'    => $request->brand_id,
-    //                 'status_id'   => $request->status_id,
-    //                 'name'        => $request->name,
-    //                 'slug'        => $request->slug,
-    //                 'description' => $request->description,
-    //                 'base_price'  => $request->base_price,
-    //                 'image'       => $imagePath, // ডাটাবেজে ইমেজের পাথ সেভ করা
-    //             ]);
-
-    //             return response()->json([
-    //                 'success' => true,
-    //                 'message' => 'Product created successfully!',
-    //                 'data'    => $product
-    //             ], 201);
-
-    //         } catch (\Exception $e) {
-    //             Log::error("Product Store Error: " . $e->getMessage());
-    //             return response()->json([
-    //                 'success' => false,
-    //                 'message' => 'Something went wrong during saving.'
-    //             ], 500);
     //         }
+
+    //         return response()->json([
+    //             'success' => true,
+    //             'message' => 'Product created successfully',
+    //             'product_id' => $productId
+    //         ], 201);
     //     });
     // }
+
+    ///===updated store method try catch=====
+    public function store(Request $request)
+    {
+        // ১. ভ্যালিডেশন (নিশ্চিত করুন variants.*.images অ্যারে কি না)
+        $request->validate([
+            'name'        => 'required|string|max:255',
+            'category_id' => 'required|integer',
+            'brand_id'    => 'required|integer',
+            'status_id'   => 'required|integer',
+            'variants'    => 'required|array|min:1',
+            'variants.*.sku'        => 'required|string',
+            'variants.*.sale_price' => 'required|numeric',
+            'variants.*.stock'      => 'required|integer',
+        ]);
+
+        try {
+            return DB::transaction(function () use ($request) {
+
+                // ১️⃣ Insert Product
+                $productId = DB::table('products')->insertGetId([
+                    'name'        => $request->name,
+                    'slug'        => Str::slug($request->name) . '-' . time(),
+                    'description' => $request->description,
+                    'category_id' => $request->category_id,
+                    'brand_id'    => $request->brand_id,
+                    'status_id'   => $request->status_id,
+                    'base_price'  => $request->base_price,
+                    'created_at'  => now(),
+                    'updated_at'  => now(),
+                ]);
+
+                // ২️⃣ Insert Variants
+                foreach ($request->variants as $index => $variantData) {
+
+                    $variantId = DB::table('product_variants')->insertGetId([
+                        'product_id' => $productId,
+                        'color_id'   => $variantData['color_id'] ?? null,
+                        'size_id'    => $variantData['size_id'] ?? null,
+                        'sku'        => $variantData['sku'],
+                        'status_id'  => $variantData['status_id'] ?? 1,
+                        'sale_price' => $variantData['sale_price'],
+                        'stock'      => $variantData['stock'],
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+
+                    // ৩️⃣ Insert Variant Images (সরাসরি $request->file ব্যবহার করা হয়েছে)
+                    if ($request->hasFile("variants.{$index}.images")) {
+                        $images = $request->file("variants.{$index}.images");
+
+                        foreach ($images as $file) {
+                            if ($file->isValid()) {
+                                $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
+                                $path = $file->storeAs('products/variants', $filename, 'public');
+
+                                // ডাটাবেজে ইনসার্ট (সরাসরি কুয়েরি বিল্ডার)
+                                DB::table('product_images')->insert([
+                                    'product_variant_id' => $variantId,
+                                    'image'              => $path,
+                                    'is_main'            => 0,
+                                    'created_at'         => now(),
+                                    'updated_at'         => now(),
+                                ]);
+                            }
+                        }
+                    }
+                }
+
+                return response()->json([
+                    'success'    => true,
+                    'message'    => 'Product and images saved successfully!',
+                    'product_id' => $productId
+                ], 201);
+            });
+        } catch (\Exception $e) {
+            // কোনো এরর হলে সেটা কনসোলে দেখার জন্য
+            return response()->json([
+                'success' => false,
+                'message' => 'Database Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
     // Show Product
     public function show($id)
     {
-        return Product::with('brand', 'category', 'status')->findOrFail($id);
-        
+        return Product::with('brand', 'category', 'status', 'variants.images')->findOrFail($id);
     }
     //Update product Update method 
     public function update(Request $request, $id)

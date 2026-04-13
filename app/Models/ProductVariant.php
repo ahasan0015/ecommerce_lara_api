@@ -43,4 +43,9 @@ class ProductVariant extends Model
     {
         return $this->belongsTo(VariantStatus::class, 'status_id');
     }
+
+    public function images()
+    {
+        return $this->hasMany(ProductImage::class, 'product_variant_id');
+    }
 }
