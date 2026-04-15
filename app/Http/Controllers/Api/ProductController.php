@@ -265,47 +265,47 @@ class ProductController extends Controller
     {
         $product = Product::findOrFail($id);
 
-        // ১. ভ্যালিডেশন
+        // ১. validation
         $request->validate([
             'name'        => 'required|string|max:200',
             'brand_id'    => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
             'status_id'   => 'required|exists:product_statuses,id',
             'base_price'  => 'required|numeric',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // ৫ এমবি ম্যাক্স
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // photo size 5 mb max
         ]);
 
-        // ২. ইমেজ প্রসেসিং
+        // ২. Image Processing
         if ($request->hasFile('image')) {
-            // নতুন ইমেজ থাকলে পুরানো ইমেজ ডিলিট করা
+            // if new image append old image deleted
             if ($product->image && Storage::disk('public')->exists($product->image)) {
                 Storage::disk('public')->delete($product->image);
             }
 
             $image = $request->file('image');
             $manager = new ImageManager(new Driver());
-            $imageName = 'product_' . time() . '.webp'; // WebP ফরম্যাটে সেভ করা ভালো
+            $imageName = 'product_' . time() . '.webp'; // photo save .webp formate
 
-            // ইমেজ রিসাইজ (১২০০x১২০০) এবং ফরম্যাট কনভার্ট
+            // image resize (1200x1200) convert
             $img = $manager->read($image);
-            $img->cover(1200, 1200); // সেন্ট্রাল ক্রপ ও রিসাইজ
-            $encoded = $img->toWebp(85); // ৮৫% কোয়ালিটি WebP
+            $img->cover(1200, 1200); // central crop and resize
+            $encoded = $img->toWebp(85); // 85% quality webp
 
-            // স্টোরেজে সেভ করা
+            // Save to storage
             Storage::disk('public')->put('products/' . $imageName, (string) $encoded);
             $product->image = 'products/' . $imageName;
         }
 
-        // ৩. ডাটা আপডেট
+        // ৩. Product Data update
         $product->update([
             'name'        => $request->name,
-            'slug'        => Str::slug($request->name) . '-' . $product->id, // আইডি যোগ করলে স্লাগ ইউনিক থাকবে
+            'slug'        => Str::slug($request->name) . '-' . $product->id, // add product id to make slug uniqe
             'brand_id'    => $request->brand_id,
             'category_id' => $request->category_id,
             'status_id'   => $request->status_id,
             'description' => $request->description,
             'base_price'  => $request->base_price,
-            'image'       => $product->image, // আপডেট করা ইমেজ পাথ
+            'image'       => $product->image, //Update image path
         ]);
 
         return response()->json([
