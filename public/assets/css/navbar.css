@@ -1,0 +1,40 @@
+/* Gradient background */
+.navbar-gradient {
+  background: linear-gradient(90deg, #ff6b6b, #f94d6a);
+}
+
+/* Hover dropdown for desktop */
+@media (min-width: 992px) {
+  .navbar .dropdown:hover .dropdown-menu {
+    display: block;
+    margin-top: 0;
+    transition: all 0.3s ease;
+  }
+
+  .navbar .dropdown-menu {
+    transition: all 0.3s ease;
+  }
+}
+
+/* Dropdown item hover effect */
+.dropdown-item:hover {
+  background-color: #ff6b6b;
+  color: white !important;
+}
+
+/* Nav-link hover */
+.navbar .nav-link:hover {
+  color: #ffe3e3 !important;
+  transition: 0.3s;
+}
+.navbar-gradient {
+  background: linear-gradient(90deg, #ff416c, #ff4b2b);
+}
+
+.navbar .nav-link:hover {
+  opacity: 0.85;
+}
+
+.dropdown-menu {
+  border-radius: 10px;
+}
