@@ -222,16 +222,16 @@ class ProductController extends Controller
                     if ($request->hasFile("variants.{$index}.images")) {
                         $images = $request->file("variants.{$index}.images");
 
-                        foreach ($images as $file) {
+                        foreach ($images as $imgIndex => $file) {
                             if ($file->isValid()) {
                                 $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
                                 $path = $file->storeAs('products/variants', $filename, 'public');
-
+                                $isMain = ($index === 0 && $imgIndex === 0) ? 1 : 0;
                                 // ডাটাবেজে ইনসার্ট (সরাসরি কুয়েরি বিল্ডার)
                                 DB::table('product_images')->insert([
                                     'product_variant_id' => $variantId,
                                     'image'              => $path,
-                                    'is_main'            => 0,
+                                    'is_main'            => $isMain,
                                     'created_at'         => now(),
                                     'updated_at'         => now(),
                                 ]);

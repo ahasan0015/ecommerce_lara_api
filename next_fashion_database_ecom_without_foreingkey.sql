@@ -365,7 +365,7 @@ CREATE TABLE product_variants (
 -- ==============================
 CREATE TABLE product_images (
     id INT AUTO_INCREMENT PRIMARY KEY,
-    variant_id INT,
+    product_variant_id INT,
     image VARCHAR(255),
     is_main TINYINT(1) DEFAULT 0
 );
