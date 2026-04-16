@@ -21,7 +21,7 @@
                         <li><a class="dropdown-item" href="{{ route('tshirts.index') }}">T-Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ route('shirts.page') }}">Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ route('pant.page') }}">Pants</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/men/shoes') }}">Shoes</a></li>
+                        <li><a class="dropdown-item" href="{{ route('panjabi.index') }}">Panjabi</a></li>
                     </ul>
                 </li>
 

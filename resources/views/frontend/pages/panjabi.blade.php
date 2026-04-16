@@ -1,43 +1,39 @@
 @extends('frontend.layout.master')
 
-@section('title', 'T-Shirt Collection')
+@section('title', 'Panjabi Collection')
 
 @section('content')
 <section class="container my-5">
     <h2 class="text-center fw-bold mb-4">
-        {{ $products->first()->category->name ?? 'Collection' }}
+        {{ $products->first()->category->name ?? 'Panjabi Collection' }}
     </h2>
 
     <div class="row g-4">
-        @foreach($products as $product)
+        @forelse($products as $product)
             <div class="col-lg-3 col-md-4 col-sm-6">
                 <div class="card h-100 shadow-sm border-0 product-card">
 
                     @php
-                        // প্রথম ভ্যারিয়েন্ট নেওয়া হচ্ছে SKU এবং প্রাইসের জন্য
                         $firstVariant = $product->variants->first();
-                        
-                        // ইমেজ লজিক
                         $mainImage = optional($firstVariant)->images->where('is_main', 1)->first()
                                      ?? optional($firstVariant)->images->first();
                         $imagePath = $mainImage ? asset('storage/' . $mainImage->image) : asset('assets/images/placeholder.jpg');
                     @endphp
 
-                    {{-- ১. ইমেজ --}}
                     <img src="{{ $imagePath }}" alt="{{ $product->product_name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
 
                     <div class="card-body text-center">
-                        {{-- ২. প্রোডাক্টের নাম --}}
-                        <h5 class="card-title h6 fw-bold mb-1">{{ $product->name }}</h5>
+                        {{-- প্রোডাক্টের নাম --}}
+                        <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
                         
-                        {{-- ৩. SKU (এটি ভ্যারিয়েন্ট থেকে আসছে) --}}
+                        {{-- SKU --}}
                         <p class="text-muted small mb-1">
                             SKU: <span class="fw-semibold">{{ $firstVariant->sku ?? 'N/A' }}</span>
                         </p>
 
-                        <p class="text-muted small mb-2">Mens Collection</p>
+                        <p class="text-muted small mb-2">Exclusive Panjabi</p>
 
-                        {{-- ৪. প্রাইস --}}
+                        {{-- প্রাইস --}}
                         <h6 class="fw-bold text-danger">
                             ৳ {{ number_format($firstVariant->sale_price ?? 0, 0) }}
                         </h6>
@@ -48,22 +44,11 @@
                     </div>
                 </div>
             </div>
-        @endforeach
+        @empty
+            <div class="col-12 text-center">
+                <p>No Panjabi found in this collection.</p>
+            </div>
+        @endforelse
     </div>
 </section>
-@endsection
-
-@section('styles')
-<style>
-    .product-card {
-        transition: transform 0.3s ease;
-        border-radius: 10px;
-        overflow: hidden;
-    }
-
-    .product-card:hover {
-        transform: translateY(-5px);
-        box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important;
-    }
-</style>
 @endsection
