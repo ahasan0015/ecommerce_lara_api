@@ -28,4 +28,16 @@ class ProductController2 extends Controller
 
         return view('frontend.pages.panjabi', compact('products'));
     }
+
+    //women Collection
+    public function pakistaniDress()
+    {
+        // শুধুমাত্র 'Pakistani Dress' ক্যাটাগরির প্রোডাক্টগুলো আনা হচ্ছে
+        $products = Product::whereHas('category', function ($query) {
+            $query->where('name', 'Pakistani Dress'); // আপনার ডাটাবেজে ক্যাটাগরির নাম 'Pakistani Dress' হলে এটি কাজ করবে
+        })->with(['variants.images', 'category'])->get();
+
+        // ভিউ ফাইল হিসেবে 'frontend.pages.pakistanidress' রিটার্ন করা হচ্ছে
+        return view('frontend.pages.women.pakistanidress', compact('products'));
+    }
 }

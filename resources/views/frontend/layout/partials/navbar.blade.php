@@ -30,7 +30,7 @@
                         Women
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url('/women/dresses') }}">Dresses</a></li>
+                        <li><a class="dropdown-item" href="{{ route('pakistani.dress') }}">Pakistani Dresses</a></li>
                         <li><a class="dropdown-item" href="{{ url('/women/tops') }}">Tops</a></li>
                         <li><a class="dropdown-item" href="{{ url('/women/pants') }}">Pants</a></li>
                         <li><a class="dropdown-item" href="{{ url('/women/shoes') }}">Shoes</a></li>

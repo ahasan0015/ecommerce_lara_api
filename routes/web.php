@@ -28,5 +28,6 @@ Route::get('/pant', function () {
 // Route::get('shirts', [ProductController::class, 'tshirtPage'])->name('tshirts.page');
 Route::get('/tshirts', [ProductController2::class, 'index'])->name('tshirts.index');
 Route::get('/men-panjabi', [ProductController2::class, 'panjabi'])->name('panjabi.index');
+Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->name('pakistani.dress');
 
 require __DIR__.'/auth.php';
