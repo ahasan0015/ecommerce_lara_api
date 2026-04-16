@@ -32,20 +32,25 @@ class RegisteredUserController extends Controller
     {
         $request->validate([
             'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:'.User::class],
+            'email' => ['required', 'string', 'lowercase', 'email', 'max:255', 'unique:' . User::class],
             'password' => ['required', 'confirmed', Rules\Password::defaults()],
+            // যদি ফোন ফিল্ড থাকে তবে এখানে অ্যাড করুন
+            'phone' => ['required', 'string', 'max:20'], 
         ]);
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
+            'phone' => $request->phone, // যদি ফোন ফিল্ড ডাটাবেজে থাকে
+            'role_id' => 3, // এখানে সরাসরি ৩ (Customer) সেট করে দেওয়া হলো
         ]);
 
         event(new Registered($user));
 
         Auth::login($user);
 
+        // রেজিস্ট্রেশনের পর কোথায় যাবে সেটি এখানে ঠিক করুন
         return redirect(route('dashboard', absolute: false));
     }
 }
