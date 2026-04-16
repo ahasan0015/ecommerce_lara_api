@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -20,5 +21,13 @@ Route::middleware('auth')->group(function () {
 Route::get('/t-shirts', function () {
     return view('frontend.pages.tshirts');
 })->name('tshirts.page');
+Route::get('/shirts', function () {
+    return view('frontend.pages.shirts');
+})->name('shirts.page');
+Route::get('/pant', function () {
+    return view('frontend.pages.pant');
+})->name('pant.page');
+
+// Route::get('shirts', [ProductController::class, 'tshirtPage'])->name('tshirts.page');
 
 require __DIR__.'/auth.php';
