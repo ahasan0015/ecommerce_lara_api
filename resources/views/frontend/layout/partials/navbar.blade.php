@@ -18,7 +18,7 @@
                         Men
                     </a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ url('/men/t-shirts') }}">T-Shirts</a></li>
+                        <li><a class="dropdown-item" href="{{ route('tshirts.page') }}">T-Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ url('/men/shirts') }}">Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ url('/men/pants') }}">Pants</a></li>
                         <li><a class="dropdown-item" href="{{ url('/men/shoes') }}">Shoes</a></li>
