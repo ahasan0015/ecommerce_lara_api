@@ -50,7 +50,7 @@ class ProductController extends Controller
             ->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
             ->leftJoin('product_statuses', 'products.status_id', '=', 'product_statuses.id')
             ->orderBy('products.created_at', 'desc')
-            ->get();
+            ->paginate(10);
 
         // 2️⃣ Loop through products to get variants + images
         foreach ($products as $product) {
@@ -82,8 +82,11 @@ class ProductController extends Controller
 
         // 3️⃣ Return as JSON
         return response()->json([
-            'success' => true,
-            'data'    => $products
+            'success'      => true,
+            'data'         => $products->items(), // শুধু product array
+            'current_page' => $products->currentPage(),
+            'last_page'    => $products->lastPage(),
+            'total'        => $products->total(),
         ]);
     }
 
