@@ -9,61 +9,194 @@
     </h2>
 
     <div class="row g-4">
-        {{-- কন্ট্রোলার থেকে আসা $products ভেরিয়েবল লুপ করা হচ্ছে --}}
         @forelse($products as $product)
-            <div class="col-lg-3 col-md-4 col-sm-6">
-                <div class="card h-100 shadow-sm border-0 product-card">
-                    
-                    {{-- পাঞ্জাবি পেজের মতো ইমেজ লজিক এখানে দেওয়া হলো --}}
-                    @php
-                        $firstVariant = $product->variants->first();
-                        // মেইন ইমেজ চেক করা হচ্ছে, না থাকলে প্রথম ইমেজ নেওয়া হচ্ছে
-                        $mainImage = optional($firstVariant)->images->where('is_main', 1)->first()
-                                     ?? optional($firstVariant)->images->first();
-                        
-                        // পাথ হিসেবে storage/ ব্যবহার করা হয়েছে আপনার পাঞ্জাবি পেজের মতো
-                        $imagePath = $mainImage 
-                                     ? asset('storage/' . $mainImage->image) 
-                                     : asset('assets/images/placeholder.jpg');
-                    @endphp
+        <div class="col-lg-3 col-md-4 col-sm-6">
+            <div class="card h-100 shadow-sm border-0 product-card">
 
-                    <img src="{{ $imagePath }}" alt="{{ $product->product_name ?? $product->name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
+                @php
+                $firstVariant = $product->variants->first();
+                $mainImage = optional($firstVariant)->images->where('is_main', 1)->first()
+                ?? optional($firstVariant)->images->first();
+                $imagePath = $mainImage ? asset('storage/' . $mainImage->image) : asset('assets/images/placeholder.jpg');
 
-                    <div class="card-body text-center">
-                        {{-- প্রোডাক্টের নাম --}}
-                        <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
-                        
-                        {{-- SKU --}}
-                        <p class="text-muted small mb-1">
-                            SKU: <span class="fw-semibold">{{ $firstVariant->sku ?? 'N/A' }}</span>
-                        </p>
+                // ভেরিয়েন্ট থেকে সাইজ সংগ্রহ করা
+                $availableSizes = $product->variants->map(function($v) {
+                return [
+                'id' => $v->id,
+                'size_name' => optional($v->size)->name ?? 'N/A'
+                ];
+                })->toArray();
+                @endphp
 
-                        <p class="text-muted small mb-2">Exclusive Pakistani Dress</p>
+                <img src="{{ $imagePath }}" alt="{{ $product->product_name ?? $product->name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
 
-                        {{-- প্রাইস (পাঞ্জাবি পেজের মতো sale_price ব্যবহার করা হয়েছে) --}}
-                        <h6 class="fw-bold text-danger">
-                            ৳ {{ number_format($firstVariant->sale_price ?? 0, 0) }}
-                        </h6>
-                    </div>
+                <div class="card-body text-center">
+                    <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
+                    <p class="text-muted small mb-2 text-uppercase">Exclusive Pakistani Collection</p>
+                    <h6 class="fw-bold text-danger">
+                        ৳ {{ number_format($firstVariant->sale_price ?? 0, 0) }}
+                    </h6>
+                </div>
 
-                    <div class="card-footer bg-white border-0 pb-3">
-                        <form action="#" method="POST">
-                            @csrf
-                            <input type="hidden" name="product_id" value="{{ $product->id }}">
-                            <button type="submit" class="btn btn-dark w-100 rounded-pill">
-                                Add to Cart
-                            </button>
-                        </form>
-                    </div>
+                <div class="card-footer bg-white border-0 pb-3">
+                    <button
+                        class="btn btn-dark w-100 rounded-pill"
+                        data-id="{{ $product->id }}"
+                        data-name="{{ $product->product_name ?? $product->name }}"
+                        data-price="{{ $firstVariant->sale_price ?? 0 }}"
+                        data-sizes="{{ json_encode($availableSizes) }}"
+                        onclick="openSizeModal(this)">
+                        Add to Cart
+                    </button>
                 </div>
             </div>
+        </div>
         @empty
-            <div class="col-12 text-center my-5">
-                <h4 class="text-muted">No Pakistani Dress found in this collection.</h4>
-            </div>
+        <div class="col-12 text-center my-5">
+            <h4 class="text-muted">No Pakistani Dress found in this collection.</h4>
+        </div>
         @endforelse
     </div>
 </section>
+
+<div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header border-0">
+                <h5 class="modal-title fw-bold" id="sizeModalLabel">Select Your Size</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body text-center">
+                <p id="modalProductName" class="fw-semibold text-muted mb-3"></p>
+                <div class="d-flex justify-content-center flex-wrap gap-2 mb-3" id="sizeOptions">
+                </div>
+            </div>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" id="confirmAddToCart" class="btn btn-dark rounded-pill px-5 py-2">Confirm Add to Cart</button>
+            </div>
+        </div>
+    </div>
+</div>
+@endsection
+
+@section('js')
+<script>
+    let selectedProductData = null;
+
+    function openSizeModal(button) {
+        const productId = button.getAttribute('data-id');
+        const name = button.getAttribute('data-name');
+        const price = button.getAttribute('data-price');
+        const sizesData = button.getAttribute('data-sizes');
+        
+        // ইমেজ সংগ্রহ করার জন্য কার্ড থেকে ইমেজ সোর্স নিন
+        const productImage = button.closest('.product-card').querySelector('img').src;
+
+        let sizes = [];
+        try {
+            sizes = JSON.parse(sizesData);
+        } catch (e) {
+            console.error("JSON parse error:", e);
+        }
+
+        // selectedProductData তে ইমেজ যোগ করা হয়েছে
+        selectedProductData = { 
+            id: productId, 
+            name: name, 
+            price: price, 
+            image: productImage 
+        };
+
+        document.getElementById('modalProductName').innerText = name;
+        
+        let sizeHtml = '';
+        if(Array.isArray(sizes) && sizes.length > 0) {
+            sizes.forEach(item => {
+                sizeHtml += `
+                    <div class="m-1">
+                        <input type="radio" class="btn-check" name="productSize" 
+                               id="v_${item.id}" value="${item.size_name}" data-variant-id="${item.id}" autocomplete="off">
+                        <label class="btn btn-outline-dark px-3 py-2" for="v_${item.id}">${item.size_name}</label>
+                    </div>
+                `;
+            });
+        } else {
+            sizeHtml = '<p class="text-danger">Out of stock!</p>';
+        }
+        
+        document.getElementById('sizeOptions').innerHTML = sizeHtml;
+
+        const modalEl = document.getElementById('sizeModal');
+        const myModal = new bootstrap.Modal(modalEl);
+        myModal.show();
+    }
+
+    document.getElementById('confirmAddToCart').addEventListener('click', function() {
+        const selectedOption = document.querySelector('input[name="productSize"]:checked');
+        
+        if (!selectedOption) {
+            alert('Please select a size!');
+            return;
+        }
+
+        const variantId = selectedOption.getAttribute('data-variant-id');
+        const sizeLabel = selectedOption.value;
+        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+
+        if (isLoggedIn) {
+            addToDatabaseCart(variantId, sizeLabel);
+        } else {
+            // ইমেজসহ লোকাল স্টোরেজে পাঠানো হচ্ছে
+            addToLocalStorageCart(variantId, selectedProductData.name, selectedProductData.price, sizeLabel, selectedProductData.image);
+        }
+
+        const modalEl = document.getElementById('sizeModal');
+        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+        if (modalInstance) modalInstance.hide();
+    });
+
+    // এখানে image প্যারামিটার যোগ করা হয়েছে
+    function addToLocalStorageCart(variantId, name, price, size, image) {
+        let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+        let existingItem = cart.find(item => item.variant_id == variantId);
+
+        if (existingItem) {
+            existingItem.quantity = parseInt(existingItem.quantity) + 1;
+        } else {
+            cart.push({
+                variant_id: variantId,
+                name: name,
+                price: parseFloat(price),
+                quantity: 1,
+                size: size,
+                image: image // ইমেজটি এখানে সেভ হচ্ছে
+            });
+        }
+
+        localStorage.setItem('guest_cart', JSON.stringify(cart));
+        if (typeof updateCartBadge === "function") updateCartBadge();
+        alert(`Success! ${name} (${size}) added to cart.`);
+    }
+
+    function addToDatabaseCart(variantId, size) {
+        fetch("{{ url('/cart/add-db') }}", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRF-TOKEN": "{{ csrf_token() }}"
+            },
+            body: JSON.stringify({ variant_id: variantId, quantity: 1, size: size })
+        })
+        .then(res => res.json())
+        .then(data => {
+            if (data.status === 'success') {
+                location.reload(); 
+            } else {
+                alert('Failed to add to cart.');
+            }
+        });
+    }
+</script>
 @endsection
 
 @section('styles')
@@ -71,8 +204,15 @@
     .product-card {
         transition: transform 0.3s ease;
     }
+
     .product-card:hover {
         transform: translateY(-5px);
+    }
+
+    /* রেডিও বাটনের ডিজাইন কাস্টমাইজেশন */
+    .btn-check:checked+.btn-outline-dark {
+        background-color: #212529;
+        color: #fff;
     }
 </style>
 @endsection

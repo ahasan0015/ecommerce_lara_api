@@ -48,7 +48,30 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-    <!-- @stack('js') -->
+    <script>
+    function updateCartBadge() {
+        const cartBadge = document.getElementById('cart-count');
+        if (!cartBadge) return; // if not cart badge funtion closed
+
+        // সঠিক ব্লেড সিনট্যাক্স (Extra { } রিমুভ করা হয়েছে)
+        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+
+        if (!isLoggedIn) {
+            // গেস্ট ইউজারের জন্য লোকাল স্টোরেজ থেকে কাউন্ট আপডেট
+            let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+            let totalCount = cart.reduce((total, item) => total + parseInt(item.quantity), 0);
+            cartBadge.innerText = totalCount;
+        } else {
+            // লগইন ইউজারের ক্ষেত্রে location.reload() সরিয়ে দেওয়া হয়েছে।
+            // কারণ লগইন থাকলে লারাভেল নিজে থেকেই নেভবার রেন্ডার করার সময় কাউন্ট বসিয়ে দেয়।
+            console.log("User logged in: Database count managed by Laravel.");
+        }
+    }
+
+    // পেজ লোড হওয়ার সময় কাউন্ট চেক করবে
+    document.addEventListener('DOMContentLoaded', updateCartBadge);
+</script>
+
     @yield('js')
 </body>
 

@@ -53,8 +53,11 @@
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link btn btn-outline-light fw-bold px-3 rounded text-white" href="{{ url('/cart') }}">
+                    <a class="nav-link btn btn-outline-light position-relative" href="{{ route('cart.index') }}">
                         🛒 Cart
+                        <span id="cart-count" class="badge bg-danger rounded-pill">
+                            {{ Auth::check() ? Auth::user()->cart?->items->sum('quantity') ?? 0 : 0 }}
+                        </span>
                     </a>
                 </li>
 
@@ -64,17 +67,19 @@
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         @guest
-                            <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
-                            <li><a class="dropdown-item" href="{{ route('register') }}">Register</a></li>
+                        <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
+                        <li><a class="dropdown-item" href="{{ route('register') }}">Register</a></li>
                         @else
-                            <li><a class="dropdown-item" href="{{ url('/profile') }}">My Profile</a></li>
-                            <li><hr class="dropdown-divider"></li>
-                            <li>
-                                <form action="{{ route('logout') }}" method="POST">
-                                    @csrf
-                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
-                                </form>
-                            </li>
+                        <li><a class="dropdown-item" href="{{ url('/profile') }}">My Profile</a></li>
+                        <li>
+                            <hr class="dropdown-divider">
+                        </li>
+                        <li>
+                            <form action="{{ route('logout') }}" method="POST">
+                                @csrf
+                                <button type="submit" class="dropdown-item text-danger">Logout</button>
+                            </form>
+                        </li>
                         @endguest
                     </ul>
                 </li>
