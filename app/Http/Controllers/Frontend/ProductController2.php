@@ -15,6 +15,7 @@ class ProductController2 extends Controller
             $query->where('name', 'Mens T-Shirt');
         })->with(['variants.images', 'category'])->get();
 
+        // dd($products);
         return view('frontend.pages.tshirts', compact('products'));
     }
 

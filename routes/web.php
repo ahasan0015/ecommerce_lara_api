@@ -26,7 +26,7 @@ Route::get('/pant', function () {
     return view('frontend.pages.pant');
 })->name('pant.page');
 
-// Route::get('shirts', [ProductController::class, 'tshirtPage'])->name('tshirts.page');
+
 Route::get('/tshirts', [ProductController2::class, 'index'])->name('tshirts.index');
 Route::get('/men-panjabi', [ProductController2::class, 'panjabi'])->name('panjabi.index');
 Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->name('pakistani.dress');
