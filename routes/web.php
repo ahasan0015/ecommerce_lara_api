@@ -33,13 +33,12 @@ Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->n
 
 //Cart Controller
 
-// কার্ট পেজ
+// to open cart page
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
-// লগইন ইউজারের অ্যাড টু কার্ট (AJAX এর জন্য)
+// Login User add to cart for AJAX 
 Route::post('/cart/add-db', [CartController::class, 'addToCart']);
 
-// সিঙ্ক করার জন্য
 Route::post('/cart/sync', [CartController::class, 'syncCart']);
 
 //delelte cart item
@@ -49,4 +48,7 @@ Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
 
 Route::get('/product/{id}', [ProductController2::class, 'productDetails'])->name('product.details');
 
-require __DIR__.'/auth.php';
+//cart update route for login user
+Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity']);
+
+require __DIR__ . '/auth.php';

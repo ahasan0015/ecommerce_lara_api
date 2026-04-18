@@ -53,13 +53,13 @@ class CartController extends Controller
             ]);
         }
 
-        
+
         // Navbar update total count CartController.php
         $totalCount = CartItem::where('cart_id', $cart->id)->sum('quantity');
 
         return response()->json([
             'status' => 'success',
-            'total_count' => $totalCount, 
+            'total_count' => $totalCount,
             'message' => 'Added to database cart'
         ]);
     }
@@ -68,7 +68,7 @@ class CartController extends Controller
     {
         if (!Auth::check()) return response()->json(['error' => 'Unauthorized'], 401);
 
-        $guestCart = $request->input('cart_data'); 
+        $guestCart = $request->input('cart_data');
         $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
 
         foreach ($guestCart as $item) {
@@ -98,6 +98,41 @@ class CartController extends Controller
         if ($item) {
             $item->delete();
             return response()->json(['status' => 'success', 'message' => 'Item removed']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
+    }
+
+    // Cart item quantity updta method
+    public function updateQuantity(Request $request)
+    {
+        // validation
+        $request->validate([
+            'cart_id' => 'required',
+            'action' => 'required|in:increase,decrease'
+        ]);
+
+        $cartItem = CartItem::find($request->cart_id);
+
+        if ($cartItem) {
+            if ($request->action === 'increase') {
+                $cartItem->increment('quantity');
+            } else {
+                // not less than 1
+                if ($cartItem->quantity > 1) {
+                    $cartItem->decrement('quantity');
+                } else {
+                    return response()->json([
+                        'status' => 'error',
+                        'message' => 'Quantity cannot be less than 1'
+                    ], 400);
+                }
+            }
+
+            return response()->json([
+                'status' => 'success',
+                'message' => 'Quantity updated'
+            ]);
         }
 
         return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
