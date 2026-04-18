@@ -137,4 +137,35 @@ class CartController extends Controller
 
         return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
     }
+
+    //cheackout cart-controller method
+    public function getCartData()
+    {
+        // ১. লগইন করা ইউজারের কার্ট আইটেম সংগ্রহ (Eager Loading সহ)
+        $cartItems = Cart::where('user_id', auth()->id())
+            ->with(['variant.product', 'variant.images'])
+            ->get();
+
+        // ২. ডেটাকে ফরমেট করা যেন ফ্রন্টএন্ড সহজে পড়তে পারে
+        $formattedItems = $cartItems->map(function ($item) {
+            return [
+                'id'         => $item->id,
+                'variant_id' => $item->variant_id,
+                'quantity'   => $item->quantity,
+                'size'       => $item->size, // যদি আপনার কার্ট টেবিলে সাইজ কলাম থাকে
+                'name'       => $item->variant->product->name,
+                'price'      => $item->variant->sale_price,
+                'image'      => optional($item->variant->images->first())->image
+                    ? asset('storage/' . $item->variant->images->first()->image)
+                    : asset('assets/images/placeholder.jpg'),
+            ];
+        });
+
+        // ৩. JSON রেসপন্স পাঠানো
+        return response()->json([
+            'status' => 'success',
+            'items'  => $formattedItems,
+            'count'  => $cartItems->count()
+        ]);
+    }
 }

@@ -85,7 +85,7 @@
                             {{ Auth::check() ? number_format($cartItems->sum(fn($i) => $i->variant->sale_price * $i->quantity), 0) : '0' }}
                         </h3>
                         <hr>
-                        <a href="{{ url('/checkout') }}" class="btn btn-dark w-100 py-2 fs-5 rounded-pill shadow">
+                        <a href="{{ route('checkout') }}" class="btn btn-dark w-100 py-2 fs-5 rounded-pill shadow">
                             Proceed to Checkout <i class="fas fa-arrow-right ms-2"></i>
                         </a>
                     </div>
@@ -132,32 +132,32 @@
                 let imgSrc = item.image ? item.image : '{{ asset("assets/images/placeholder.jpg") }}';
 
                 html += `
-                <tr>
-                    <td>
-                        <img src="${imgSrc}" alt="Product" class="img-thumbnail shadow-sm" style="width: 80px; height: 100px; object-fit: cover;">
-                    </td>
-                    <td>
-                        <strong class="text-dark">${item.name}</strong>
-                        <p class="small mb-0 text-muted mt-1">
-                            <span class="badge bg-light text-dark border">Size: ${item.size || 'N/A'}</span>
-                        </p>
-                    </td>
-                    <td>৳ ${item.price.toLocaleString()}</td>
-                    <td>
-                        <div class="input-group input-group-sm">
-                            <button class="btn btn-outline-dark fw-bold" onclick="updateGuestQty(${index}, -1)">-</button>
-                            <input type="text" class="form-control text-center bg-white border-dark fw-bold" value="${item.quantity}" readonly>
-                            <button class="btn btn-outline-dark fw-bold" onclick="updateGuestQty(${index}, 1)">+</button>
-                        </div>
-                    </td>
-                    <td class="fw-bold">৳ ${subtotal.toLocaleString()}</td>
-                    <td>
-                        <button onclick="removeFromGuestCart(${index})" class="btn btn-sm btn-outline-danger px-3">
-                            <i class="fas fa-trash-alt"></i> Remove
-                        </button>
-                    </td>
-                </tr>
-            `;
+                    <tr>
+                        <td>
+                            <img src="${imgSrc}" alt="Product" class="img-thumbnail shadow-sm" style="width: 80px; height: 100px; object-fit: cover;">
+                        </td>
+                        <td>
+                            <strong class="text-dark">${item.name}</strong>
+                            <p class="small mb-0 text-muted mt-1">
+                                <span class="badge bg-light text-dark border">Size: ${item.size || 'N/A'}</span>
+                            </p>
+                        </td>
+                        <td>৳ ${item.price.toLocaleString()}</td>
+                        <td>
+                            <div class="input-group input-group-sm">
+                                <button class="btn btn-outline-dark fw-bold" onclick="updateGuestQty(${index}, -1)">-</button>
+                                <input type="text" class="form-control text-center bg-white border-dark fw-bold" value="${item.quantity}" readonly>
+                                <button class="btn btn-outline-dark fw-bold" onclick="updateGuestQty(${index}, 1)">+</button>
+                            </div>
+                        </td>
+                        <td class="fw-bold">৳ ${subtotal.toLocaleString()}</td>
+                        <td>
+                            <button onclick="removeFromGuestCart(${index})" class="btn btn-sm btn-outline-danger px-3">
+                                <i class="fas fa-trash-alt"></i> Remove
+                            </button>
+                        </td>
+                    </tr>
+                `;
             });
 
             cartBody.innerHTML = html;

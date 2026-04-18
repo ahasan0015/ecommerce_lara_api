@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Frontend\ProductController2;
+
 use App\Http\Controllers\ProfileController;
 use Illuminate\Support\Facades\Route;
 
@@ -50,5 +52,17 @@ Route::get('/product/{id}', [ProductController2::class, 'productDetails'])->name
 
 //cart update route for login user
 Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity']);
+
+//checkout controller
+
+Route::get('/checkout', [OrderController::class, 'index'])->name('checkout');
+
+// For order place(POST)
+Route::post('/order/place', [OrderController::class, 'store'])->name('order.place');
+
+// routes/web.php
+// Route::controller(CartController::class)->group(function () {
+//     Route::get('/api/cart-data', 'getCartData')->name('cart.data')->middleware('auth');
+// });
 
 require __DIR__ . '/auth.php';
