@@ -9,26 +9,35 @@ use Illuminate\Support\Facades\Hash;
 
 class AuthController extends Controller
 {
+    /**
+     * Get the authenticated user profile.
+     * Scramble will now be able to reflect this method.
+     */
+    public function user(Request $request)
+    {
+        return response()->json([
+            'success' => true,
+            'data' => $request->user()
+        ]);
+    }
+
     public function register(Request $request)
     {
-        // ১. ভ্যালিডেশন
         $validatedData = $request->validate([
             'name'     => 'required|string|max:255',
             'email'    => 'required|email|unique:users,email',
-            'password' => 'required|confirmed|min:6', // পাসওয়ার্ডের জন্য মিনিমাম লেংথ দেওয়া ভালো
+            'password' => 'required|confirmed|min:6',
             'phone'    => 'required|string|max:20'
         ]);
 
-        // ২. ইউজার তৈরি করা (নিরাপদ পদ্ধতি)
         $user = User::create([
             'name'     => $validatedData['name'],
             'email'    => $validatedData['email'],
             'phone'    => $validatedData['phone'],
-            'password' => bcrypt($request->password), // অথবা Hash::make($request->password)
-            'role_id'  => 2, // ডিফল্ট কোনো রোল থাকলে এখানে সেট করে দিন
+            'password' => Hash::make($request->password),
+            'role_id'  => 2, 
         ]);
 
-        // ৩. রেসপন্স পাঠানো
         return response()->json([
             'success' => true,
             'message' => 'User registered successfully!',
@@ -47,6 +56,7 @@ class AuthController extends Controller
 
         if (!$user || !Hash::check($request->password, $user->password)) {
             return response()->json([
+                'success' => false,
                 'message' => 'Invalid credentials'
             ], 401);
         }
@@ -54,22 +64,21 @@ class AuthController extends Controller
         $token = $user->createToken('auth_token')->plainTextToken;
 
         return response()->json([
-            'success' => true, // এখানে string এর বদলে boolean পাঠানো ভালো
+            'success' => true,
             'token' => $token,
             'user' => [
                 'id' => $user->id,
                 'name' => $user->name,
                 'email' => $user->email,
-                'role' => $user->role_id, // যদি কলাম খালি থাকে তবে ডিফল্ট manager হিসেবে যাবে
+                'role' => $user->role_id,
             ]
         ], 200);
     }
 
-
     public function logout(Request $request)
     {
         $request->user()->currentAccessToken()->delete();
-        // auth()->user()->tokens()->delete();
+        
         return response()->json([
             'success' => true,
             'message' => 'Logout successfully'

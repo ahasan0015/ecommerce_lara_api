@@ -38,7 +38,7 @@ class UserController extends Controller
 
         // 3. User Creation
         $user = User::create([
-            
+
             'name'          => $validatedData['name'],
             'email'      => $validatedData['email'],
             'phone'      => $request->phone,
@@ -53,37 +53,37 @@ class UserController extends Controller
             'data'    => $user
         ], 201); // 201 Created
     }
-    public function Update(Request $request, $id)
+
+    public function update(Request $request, $id)
     {
-        $request->validate([
-            'name'    => 'required|min:2|max:50',
-            // 'phone'   => 'required|min:10',
-            'role_id' => 'required|exists:roles,id'
+        $user = User::findOrFail($id);
+
+        $validated = $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|email|unique:users,email,' . $id,
+            'phone' => 'sometimes|string',
+            'password' => 'sometimes|min:6|confirmed',
+            'role_id' => 'sometimes|integer'
         ]);
 
-        // dd($request->all());
-        $user = User::find($id);
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
+        if ($request->has('password')) {
+            $validated['password'] = Hash::make($request->password);
         }
-        $user->update([
-            'name' => $request->name,
-            // 'phone' => $request->phone,
-            'role_id' => $request->role_id
-        ]);
+
+        $user->update($validated);
+
         return response()->json([
-            'status'  => 'success',
+            'success' => true,
             'message' => 'User updated successfully',
-            'data'    => $user
-        ], 200);
+            'data' => $user
+        ]);
     }
 
     public function destroy($id)
     {
-        // ১. ইউজারটি ডাটাবেসে আছে কি না খুঁজে বের করা
         $user = User::find($id);
 
-        // ২. যদি ইউজার না পাওয়া যায় তবে ৪0৪ এরর পাঠানো
+        // if user not found 404 error
         if (!$user) {
             return response()->json([
                 'status'  => 'error',
@@ -91,33 +91,31 @@ class UserController extends Controller
             ], 404);
         }
 
-        // ৩. ইউজারটি মুছে ফেলা
+        //delete user
         $user->delete();
 
-        // ৪. সাকসেস রেসপন্স পাঠানো
         return response()->json([
             'status'  => 'success',
             'message' => 'User deleted successfully'
         ], 200);
     }
     public function show($id)
-{
-    // ১. আইডি অনুযায়ী ইউজার খুঁজে বের করা
-    $user = User::find($id);
+    {
+        // find user by id
+        $user = User::find($id);
 
-    // ২. যদি ইউজার না পাওয়া যায় তবে ৪0৪ এরর পাঠানো
-    if (!$user) {
+        // if user not found 404 error
+        if (!$user) {
+            return response()->json([
+                'status'  => 'error',
+                'message' => 'User not found'
+            ], 404);
+        }
+
         return response()->json([
-            'status'  => 'error',
-            'message' => 'User not found'
-        ], 404);
+            'status'  => 'success',
+            'message' => 'User details retrieved successfully',
+            'data'    => $user
+        ], 200);
     }
-
-    // ৩. সাকসেস রেসপন্স (রিসোর্স ব্যবহার করে)
-    return response()->json([
-        'status'  => 'success',
-        'message' => 'User details retrieved successfully',
-        'data'    => $user
-    ], 200);
-}
 }

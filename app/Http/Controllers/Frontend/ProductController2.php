@@ -10,7 +10,7 @@ class ProductController2 extends Controller
 {
     public function index()
     {
-        // শুধুমাত্র Mens T-Shirt ক্যাটাগরির প্রোডাক্টগুলো ফিল্টার করে আনা হচ্ছে
+        // Only Mens T-Shirt Category data filter
         $products = Product::whereHas('category', function ($query) {
             $query->where('name', 'Mens T-Shirt');
         })->with(['variants.images', 'category'])->get();
@@ -21,9 +21,9 @@ class ProductController2 extends Controller
     //Panjabi Controller
     public function panjabi()
     {
-        // শুধুমাত্র 'Mens Panjabi' ক্যাটাগরির প্রোডাক্টগুলো আনা হচ্ছে
+        // Only 'Mens Panjabi' Category product filter
         $products = Product::whereHas('category', function ($query) {
-            $query->where('name', 'Mens Panjabi'); // আপনার ডাটাবেজে যে নাম আছে হুবহু সেটা দিন
+            $query->where('name', 'Mens Panjabi');
         })->with(['variants.images', 'category'])->get();
 
         return view('frontend.pages.panjabi', compact('products'));
@@ -32,12 +32,18 @@ class ProductController2 extends Controller
     //women Collection
     public function pakistaniDress()
     {
-        // শুধুমাত্র 'Pakistani Dress' ক্যাটাগরির প্রোডাক্টগুলো আনা হচ্ছে
+        // Only 'Pakistani Dress' Category product filter
         $products = Product::whereHas('category', function ($query) {
-            $query->where('name', 'Pakistani Dress'); // আপনার ডাটাবেজে ক্যাটাগরির নাম 'Pakistani Dress' হলে এটি কাজ করবে
+            $query->where('name', 'Pakistani Dress');
         })->with(['variants.images', 'category'])->get();
 
-        // ভিউ ফাইল হিসেবে 'frontend.pages.pakistanidress' রিটার্ন করা হচ্ছে
         return view('frontend.pages.women.pakistanidress', compact('products'));
+    }
+
+    //Product Details
+    public function productDetails($id)
+    {
+        $product = Product::with(['variants.images', 'variants.size'])->findOrFail($id);
+        return view('frontend.pages.product.product_details', compact('product'));
     }
 }

@@ -10,24 +10,24 @@ use Illuminate\Support\Facades\Auth;
 
 class CartController extends Controller
 {
-    // ১. কার্ট পেজ ভিউ করা
+    //cart page view
     public function index()
     {
-        // ইউজার লগইন থাকলে ডাটাবেজ থেকে ডেটা নিবে
+        // if user login data collect from database
         if (Auth::check()) {
             $cart = Cart::with('items.variant.product', 'items.variant.images')
-                        ->where('user_id', Auth::id())
-                        ->first();
+                ->where('user_id', Auth::id())
+                ->first();
             $cartItems = $cart ? $cart->items : collect();
         } else {
-            // লগইন না থাকলে খালি কালেকশন পাঠাবে (কারণ ডেটা আসবে LocalStorage থেকে)
+            // if not login blank submit because data collect fromLocalStorage
             $cartItems = collect();
         }
 
         return view('frontend.pages.cart_page.cart', compact('cartItems'));
     }
 
-    // ২. লগইন করা ইউজারের জন্য সরাসরি ডাটাবেজে সেভ করা
+    // login user save data to database
     public function addToCart(Request $request)
     {
         if (!Auth::check()) {
@@ -36,32 +36,49 @@ class CartController extends Controller
 
         $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
 
-        $cartItem = CartItem::updateOrCreate(
-            ['cart_id' => $cart->id, 'variant_id' => $request->variant_id],
-            ['quantity' => \DB::raw('quantity + ' . ($request->quantity ?? 1))]
-        );
+        // cheack prodct cart item already in the 
+        $cartItem = CartItem::where('cart_id', $cart->id)
+            ->where('variant_id', $request->variant_id)
+            ->first();
 
-        return response()->json(['status' => 'success', 'message' => 'Added to database cart']);
+        if ($cartItem) {
+            // increase cart item quantity
+            $cartItem->increment('quantity', $request->quantity ?? 1);
+        } else {
+            //if not add new
+            CartItem::create([
+                'cart_id' => $cart->id,
+                'variant_id' => $request->variant_id,
+                'quantity' => $request->quantity ?? 1
+            ]);
+        }
+
+        
+        // Navbar update total count CartController.php
+        $totalCount = CartItem::where('cart_id', $cart->id)->sum('quantity');
+
+        return response()->json([
+            'status' => 'success',
+            'total_count' => $totalCount, 
+            'message' => 'Added to database cart'
+        ]);
     }
-
-    // ৩. সিঙ্ক মেথড: লোকাল স্টোরেজ থেকে ডেটা ডাটাবেজে আনা
+    // collect data from local stroage
     public function syncCart(Request $request)
     {
         if (!Auth::check()) return response()->json(['error' => 'Unauthorized'], 401);
 
-        $guestCart = $request->input('cart_data'); // জাভাস্ক্রিপ্ট থেকে পাঠানো অ্যারে
+        $guestCart = $request->input('cart_data'); 
         $cart = Cart::firstOrCreate(['user_id' => Auth::id()]);
 
         foreach ($guestCart as $item) {
             $existingItem = CartItem::where('cart_id', $cart->id)
-                                    ->where('variant_id', $item['variant_id'])
-                                    ->first();
+                ->where('variant_id', $item['variant_id'])
+                ->first();
 
             if ($existingItem) {
-                // অলরেডি থাকলে কোয়ান্টিটি যোগ হবে
                 $existingItem->increment('quantity', $item['quantity']);
             } else {
-                // না থাকলে নতুন তৈরি হবে
                 CartItem::create([
                     'cart_id' => $cart->id,
                     'variant_id' => $item['variant_id'],
@@ -69,7 +86,20 @@ class CartController extends Controller
                 ]);
             }
         }
-
         return response()->json(['status' => 'synced']);
+    }
+
+    //remove from cart
+    public function removeFromCart($id)
+    {
+        // Here $id is cart_items table id
+        $item = CartItem::find($id);
+
+        if ($item) {
+            $item->delete();
+            return response()->json(['status' => 'success', 'message' => 'Item removed']);
+        }
+
+        return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
     }
 }

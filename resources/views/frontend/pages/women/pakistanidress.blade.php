@@ -28,10 +28,14 @@
                 })->toArray();
                 @endphp
 
-                <img src="{{ $imagePath }}" alt="{{ $product->product_name ?? $product->name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
+                <a href="{{ route('product.details', $product->id) }}">
+                    <img src="{{ $imagePath }}" alt="{{ $product->product_name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
+                </a>
 
                 <div class="card-body text-center">
-                    <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
+                    <a href="{{ route('product.details', $product->id) }}" class="text-decoration-none text-dark">
+                        <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
+                    </a>
                     <p class="text-muted small mb-2 text-uppercase">Exclusive Pakistani Collection</p>
                     <h6 class="fw-bold text-danger">
                         ৳ {{ number_format($firstVariant->sale_price ?? 0, 0) }}
@@ -80,123 +84,138 @@
 @endsection
 
 @section('js')
-<script>
-    let selectedProductData = null;
+ <script>
+        let selectedProductData = null;
 
-    function openSizeModal(button) {
-        const productId = button.getAttribute('data-id');
-        const name = button.getAttribute('data-name');
-        const price = button.getAttribute('data-price');
-        const sizesData = button.getAttribute('data-sizes');
-        
-        // ইমেজ সংগ্রহ করার জন্য কার্ড থেকে ইমেজ সোর্স নিন
-        const productImage = button.closest('.product-card').querySelector('img').src;
+        function openSizeModal(button) {
+            const productId = button.getAttribute('data-id');
+            const name = button.getAttribute('data-name');
+            const price = button.getAttribute('data-price');
+            const sizesData = button.getAttribute('data-sizes');
+            const productImage = button.closest('.product-card').querySelector('img').src;
 
-        let sizes = [];
-        try {
-            sizes = JSON.parse(sizesData);
-        } catch (e) {
-            console.error("JSON parse error:", e);
-        }
-
-        // selectedProductData তে ইমেজ যোগ করা হয়েছে
-        selectedProductData = { 
-            id: productId, 
-            name: name, 
-            price: price, 
-            image: productImage 
-        };
-
-        document.getElementById('modalProductName').innerText = name;
-        
-        let sizeHtml = '';
-        if(Array.isArray(sizes) && sizes.length > 0) {
-            sizes.forEach(item => {
-                sizeHtml += `
-                    <div class="m-1">
-                        <input type="radio" class="btn-check" name="productSize" 
-                               id="v_${item.id}" value="${item.size_name}" data-variant-id="${item.id}" autocomplete="off">
-                        <label class="btn btn-outline-dark px-3 py-2" for="v_${item.id}">${item.size_name}</label>
-                    </div>
-                `;
-            });
-        } else {
-            sizeHtml = '<p class="text-danger">Out of stock!</p>';
-        }
-        
-        document.getElementById('sizeOptions').innerHTML = sizeHtml;
-
-        const modalEl = document.getElementById('sizeModal');
-        const myModal = new bootstrap.Modal(modalEl);
-        myModal.show();
-    }
-
-    document.getElementById('confirmAddToCart').addEventListener('click', function() {
-        const selectedOption = document.querySelector('input[name="productSize"]:checked');
-        
-        if (!selectedOption) {
-            alert('Please select a size!');
-            return;
-        }
-
-        const variantId = selectedOption.getAttribute('data-variant-id');
-        const sizeLabel = selectedOption.value;
-        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
-
-        if (isLoggedIn) {
-            addToDatabaseCart(variantId, sizeLabel);
-        } else {
-            // ইমেজসহ লোকাল স্টোরেজে পাঠানো হচ্ছে
-            addToLocalStorageCart(variantId, selectedProductData.name, selectedProductData.price, sizeLabel, selectedProductData.image);
-        }
-
-        const modalEl = document.getElementById('sizeModal');
-        const modalInstance = bootstrap.Modal.getInstance(modalEl);
-        if (modalInstance) modalInstance.hide();
-    });
-
-    // এখানে image প্যারামিটার যোগ করা হয়েছে
-    function addToLocalStorageCart(variantId, name, price, size, image) {
-        let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-        let existingItem = cart.find(item => item.variant_id == variantId);
-
-        if (existingItem) {
-            existingItem.quantity = parseInt(existingItem.quantity) + 1;
-        } else {
-            cart.push({
-                variant_id: variantId,
-                name: name,
-                price: parseFloat(price),
-                quantity: 1,
-                size: size,
-                image: image // ইমেজটি এখানে সেভ হচ্ছে
-            });
-        }
-
-        localStorage.setItem('guest_cart', JSON.stringify(cart));
-        if (typeof updateCartBadge === "function") updateCartBadge();
-        alert(`Success! ${name} (${size}) added to cart.`);
-    }
-
-    function addToDatabaseCart(variantId, size) {
-        fetch("{{ url('/cart/add-db') }}", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-CSRF-TOKEN": "{{ csrf_token() }}"
-            },
-            body: JSON.stringify({ variant_id: variantId, quantity: 1, size: size })
-        })
-        .then(res => res.json())
-        .then(data => {
-            if (data.status === 'success') {
-                location.reload(); 
-            } else {
-                alert('Failed to add to cart.');
+            let sizes = [];
+            try {
+                sizes = JSON.parse(sizesData);
+            } catch (e) {
+                console.error("JSON parse error:", e);
             }
+
+            selectedProductData = {
+                id: productId,
+                name: name,
+                price: price,
+                image: productImage
+            };
+
+            document.getElementById('modalProductName').innerText = name;
+
+            let sizeHtml = '';
+            if (Array.isArray(sizes) && sizes.length > 0) {
+                sizes.forEach(item => {
+                    sizeHtml += `
+                                <div class="m-1">
+                                    <input type="radio" class="btn-check" name="productSize" 
+                                           id="v_${item.id}" value="${item.size_name}" data-variant-id="${item.id}" autocomplete="off">
+                                    <label class="btn btn-outline-dark px-3 py-2" for="v_${item.id}">${item.size_name}</label>
+                                </div>
+                            `;
+                });
+            } else {
+                sizeHtml = '<p class="text-danger">Out of stock!</p>';
+            }
+
+            document.getElementById('sizeOptions').innerHTML = sizeHtml;
+
+            const modalEl = document.getElementById('sizeModal');
+            const myModal = new bootstrap.Modal(modalEl);
+            myModal.show();
+        }
+
+        document.getElementById('confirmAddToCart').addEventListener('click', function () {
+            const selectedOption = document.querySelector('input[name="productSize"]:checked');
+
+            if (!selectedOption) {
+                alert('Please select a size!');
+                return;
+            }
+
+            const variantId = selectedOption.getAttribute('data-variant-id');
+            const sizeLabel = selectedOption.value;
+
+            // এখানে ফিক্স করা হয়েছে
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+
+            if (isLoggedIn) {
+                addToDatabaseCart(variantId, sizeLabel);
+            } else {
+                addToLocalStorageCart(variantId, selectedProductData.name, selectedProductData.price, sizeLabel, selectedProductData.image);
+            }
+
+            const modalEl = document.getElementById('sizeModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalEl);
+            if (modalInstance) modalInstance.hide();
         });
-    }
-</script>
+
+        function addToLocalStorageCart(variantId, name, price, size, image) {
+            let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+            let existingItem = cart.find(item => item.variant_id == variantId);
+
+            if (existingItem) {
+                existingItem.quantity = parseInt(existingItem.quantity) + 1;
+            } else {
+                cart.push({
+                    variant_id: variantId,
+                    name: name,
+                    price: parseFloat(price),
+                    quantity: 1,
+                    size: size,
+                    image: image
+                });
+            }
+
+            localStorage.setItem('guest_cart', JSON.stringify(cart));
+
+            // চেক করুন এই ফাংশনটি আপনার মাস্টার ফাইলে আছে কিনা
+            if (typeof updateCartBadge === "function") {
+                updateCartBadge();
+            }
+
+            alert(`Success! ${name} (${size}) added to cart.`);
+        }
+
+        function addToDatabaseCart(variantId, size) {
+            fetch("{{ url('/cart/add-db') }}", {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "X-CSRF-TOKEN": "{{ csrf_token() }}",
+                    "Accept": "application/json"
+                },
+                body: JSON.stringify({
+                    variant_id: variantId,
+                    quantity: 1,
+                    size: size
+                })
+            })
+                .then(res => res.json())
+                .then(data => {
+                    console.log("Response from server:", data); // এটি দিয়ে চেক করুন total_count আসছে কি না
+                    if (data.status === 'success') {
+                        // রিলোড ছাড়া সরাসরি ব্যাজ আপডেট
+                        updateCartBadge(data.total_count);
+
+                        alert('Product added to cart successfully!');
+
+                        // মডেল বন্ধ করা
+                        const modalEl = document.getElementById('sizeModal');
+                        const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                        if (modalInstance) modalInstance.hide();
+                    }
+                })
+                .catch(err => console.error('Error:', err));
+        }
+    </script>
 @endsection
 
 @section('styles')

@@ -14,7 +14,8 @@
             <ul class="navbar-nav me-auto mb-2 mb-lg-0">
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
+                        data-bs-toggle="dropdown">
                         Men
                     </a>
                     <ul class="dropdown-menu">
@@ -26,7 +27,8 @@
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
+                        data-bs-toggle="dropdown">
                         Women
                     </a>
                     <ul class="dropdown-menu">
@@ -48,38 +50,40 @@
 
                 <li class="nav-item">
                     <form class="d-flex" action="{{ url('/search') }}" method="GET">
-                        <input class="form-control form-control-sm me-2" type="search" name="query" placeholder="Search products" />
+                        <input class="form-control form-control-sm me-2" type="search" name="query"
+                            placeholder="Search products" />
                     </form>
                 </li>
 
                 <li class="nav-item">
                     <a class="nav-link btn btn-outline-light position-relative" href="{{ route('cart.index') }}">
                         🛒 Cart
-                        <span id="cart-count" class="badge bg-danger rounded-pill">
-                            {{ Auth::check() ? Auth::user()->cart?->items->sum('quantity') ?? 0 : 0 }}
+                        <span class="badge bg-danger" id="cart-count">
+                            {{ Auth::check() ? (Auth::user()->cart?->items->sum('quantity') ?? 0) : 0 }}
                         </span>
                     </a>
                 </li>
 
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button" data-bs-toggle="dropdown">
+                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
+                        data-bs-toggle="dropdown">
                         👤 My Account
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         @guest
-                        <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
-                        <li><a class="dropdown-item" href="{{ route('register') }}">Register</a></li>
+                            <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
+                            <li><a class="dropdown-item" href="{{ route('register') }}">Register</a></li>
                         @else
-                        <li><a class="dropdown-item" href="{{ url('/profile') }}">My Profile</a></li>
-                        <li>
-                            <hr class="dropdown-divider">
-                        </li>
-                        <li>
-                            <form action="{{ route('logout') }}" method="POST">
-                                @csrf
-                                <button type="submit" class="dropdown-item text-danger">Logout</button>
-                            </form>
-                        </li>
+                            <li><a class="dropdown-item" href="{{ url('/profile') }}">My Profile</a></li>
+                            <li>
+                                <hr class="dropdown-divider">
+                            </li>
+                            <li>
+                                <form action="{{ route('logout') }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                </form>
+                            </li>
                         @endguest
                     </ul>
                 </li>

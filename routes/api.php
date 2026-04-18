@@ -1,11 +1,8 @@
 <?php
 
-
-use App\Http\Controllers\Api\ProductVariantController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\Api\AuthController;
-
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ColorController;
@@ -14,76 +11,44 @@ use App\Http\Controllers\Api\ProductStatusController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UserController;
+use App\Http\Controllers\Api\ProductVariantController;
 
-use App\Models\Role;
-use Illuminate\Foundation\Auth\User;
-
-//=====this route is test route when command php artisan install:api====
-
-// Route::get('/user', function (Request $request) {
-//     return $request->user();
-// })->middleware('auth:sanctum');
-
+/*
+|--------------------------------------------------------------------------
+| Public Routes
+|--------------------------------------------------------------------------
+*/
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'login']);
 
-
-// ২. প্রোটেক্টেড রাউট (যেগুলো টোকেন ছাড়া কাজ করবে না)
+/*
+|--------------------------------------------------------------------------
+| Protected Routes (Sanctum)
+|--------------------------------------------------------------------------
+*/
 Route::middleware('auth:sanctum')->group(function () {
 
-    // লগইন করা ইউজারের ডাটা দেখার জন্য (লারাভেলের ডিফল্টটা এখানে রাখুন)
-    Route::get('/user', function (Request $request) {
-        return $request->user();
-    });
-
-    // লগআউট রাউট
+    // Auth & User Management
+    Route::get('/user', [AuthController::class, 'user']); 
     Route::post('/logout', [AuthController::class, 'logout']);
-    // ইউজার লিস্ট দেখার জন্য
-    Route::get('/users', [UserController::class, 'index']);
-    Route::post('/users', [UserController::class, 'store']);
-    Route::get('/users/{id}', [UserController::class, 'show']);
-    Route::patch('/users/{id}', [UserController::class, 'update']);
-    Route::delete('/users/{id}', [UserController::class, 'destroy']);
-
-    //role api
+    
+    Route::apiResource('users', UserController::class);
     Route::get('/roles', [RoleController::class, 'index']);
 
-    //category route
-    Route::get('/categories', [CategoryController::class, 'index']);
-    Route::post('/categories', [CategoryController::class, 'store']);
-    Route::get('/categories/{id}', [CategoryController::class, 'show']);
-    Route::patch('/categories/{id}', [CategoryController::class, 'update']);
-    Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
-
-    //brand route
+    // Inventory & Catalog
+    Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
-    // ড্রপডাউনের জন্য আলাদা রাউট
-    Route::get('product-statuses', [ProductStatusController::class, 'index']);
-
-    //products
     Route::apiResource('products', ProductController::class);
-
-
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
+    
+    Route::get('product-statuses', [ProductStatusController::class, 'index']);
+
     // Product Variant Routes
-    // --- Product Variant Routes ---
     Route::prefix('variants')->group(function () {
-        
-        // নির্দিষ্ট প্রোডাক্টের সব ভ্যারিয়েন্ট ফেচ করা
-        // GET /api/variants/product/5
         Route::get('/product/{id}', [ProductVariantController::class, 'getProductVariants']);
-
-        // Bulk Variant জেনারেট করা
-        // POST /api/variants/bulk-store
         Route::post('/bulk-store', [ProductVariantController::class, 'storeBulkVariants']);
-
-        // ইনলাইন স্টক আপডেট করা
-        // PATCH /api/variants/10/update-stock
         Route::patch('/{id}/update-stock', [ProductVariantController::class, 'updateStock']);
-
-        // ভ্যারিয়েন্ট ডিলিট করা
-        // DELETE /api/variants/10
         Route::delete('/{id}', [ProductVariantController::class, 'destroy']);
     });
 });

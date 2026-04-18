@@ -42,4 +42,11 @@ Route::post('/cart/add-db', [CartController::class, 'addToCart']);
 // সিঙ্ক করার জন্য
 Route::post('/cart/sync', [CartController::class, 'syncCart']);
 
+//delelte cart item
+Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
+
+//product details page
+
+Route::get('/product/{id}', [ProductController2::class, 'productDetails'])->name('product.details');
+
 require __DIR__.'/auth.php';

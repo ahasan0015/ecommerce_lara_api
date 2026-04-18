@@ -35,42 +35,51 @@
 <body>
 
     <div class="d-flex flex-column min-vh-100">
-        {{-- Navbar (React: <Navbar />) --}}
+        {{-- Navbar (React:
+        <Navbar />) --}}
         @include('frontend.layout.partials.navbar')
 
-        {{-- Main content (React: <Outlet />) --}}
+        {{-- Main content (React:
+        <Outlet />) --}}
         <main class="flex-fill">
             @yield('content')
         </main>
 
-        {{-- Footer (React: <Footer />) --}}
+        {{-- Footer (React:
+        <Footer />) --}}
         @include('frontend.layout.partials.footer')
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-    function updateCartBadge() {
-        const cartBadge = document.getElementById('cart-count');
-        if (!cartBadge) return; // if not cart badge funtion closed
+        // এটি master.blade.php তে থাকবে
+        document.addEventListener('DOMContentLoaded', function () {
+            updateCartBadge(); // পেজ লোড হলেই ব্যাজ আপডেট হবে
+        });
 
-        // সঠিক ব্লেড সিনট্যাক্স (Extra { } রিমুভ করা হয়েছে)
-        const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+        function updateCartBadge(newCount = null) {
+            const cartBadge = document.getElementById('cart-count');
 
-        if (!isLoggedIn) {
-            // গেস্ট ইউজারের জন্য লোকাল স্টোরেজ থেকে কাউন্ট আপডেট
-            let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-            let totalCount = cart.reduce((total, item) => total + parseInt(item.quantity), 0);
-            cartBadge.innerText = totalCount;
-        } else {
-            // লগইন ইউজারের ক্ষেত্রে location.reload() সরিয়ে দেওয়া হয়েছে।
-            // কারণ লগইন থাকলে লারাভেল নিজে থেকেই নেভবার রেন্ডার করার সময় কাউন্ট বসিয়ে দেয়।
-            console.log("User logged in: Database count managed by Laravel.");
+            if (!cartBadge) {
+                console.error("Cart badge element not found! Make sure id='cart-count' exists in navbar.");
+                return;
+            }
+
+            //login user AJAX
+            if (newCount !== null) {
+                cartBadge.innerText = newCount;
+                return;
+            }
+
+            // default loading
+            const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            if (!isLoggedIn) {
+                let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+                let totalCount = cart.reduce((total, item) => total + parseInt(item.quantity), 0);
+                cartBadge.innerText = totalCount;
+            }
         }
-    }
-
-    // পেজ লোড হওয়ার সময় কাউন্ট চেক করবে
-    document.addEventListener('DOMContentLoaded', updateCartBadge);
-</script>
+    </script>
 
     @yield('js')
 </body>

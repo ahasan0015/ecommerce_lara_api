@@ -194,17 +194,29 @@ function updateDbQty(cartId, action) {
 
 function removeFromDbCart(cartId) {
     if(confirm('Are you sure you want to remove this item?')) {
+        // এখানে fetch এর ভেতরে headers অংশটি খেয়াল করুন
         fetch("{{ url('/cart/remove') }}/" + cartId, {
             method: "DELETE",
-            headers: { "X-CSRF-TOKEN": "{{ csrf_token() }}" }
+            headers: { 
+                "X-CSRF-TOKEN": "{{ csrf_token() }}", // লারাভেলের সিকিউরিটির জন্য
+                "Content-Type": "application/json",    // আমরা কি ধরনের ডেটা পাঠাচ্ছি
+                "Accept": "application/json"           // আমরা কি ধরনের রেসপন্স আশা করছি
+            }
         })
         .then(res => res.json())
         .then(data => {
-            if (data.status === 'success') location.reload();
+            if (data.status === 'success') {
+                location.reload(); // ডিলিট সফল হলে পেজ রিলোড হবে
+            } else {
+                alert('আইটেমটি রিমুভ করা যায়নি। আবার চেষ্টা করুন।');
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('সার্ভারে সমস্যা হয়েছে।');
         });
     }
 }
-
 function syncGuestCartWithDatabase() {
     let guestCart = JSON.parse(localStorage.getItem('guest_cart')) || [];
     if (guestCart.length > 0) {
