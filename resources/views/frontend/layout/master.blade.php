@@ -30,7 +30,7 @@
             padding: 40px 0;
         }
     </style>
-    
+
     @yield('css')
 </head>
 

@@ -167,6 +167,7 @@ CREATE TABLE orders (
     discount DECIMAL(10,2) DEFAULT 0,
     total DECIMAL(10,2),
     payment_method VARCHAR(50),
+    payment_status_id Varchar(50),
     created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
 

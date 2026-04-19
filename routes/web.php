@@ -52,7 +52,7 @@ Route::delete('/cart/remove/{id}', [CartController::class, 'removeFromCart']);
 Route::get('/product/{id}', [ProductController2::class, 'productDetails'])->name('product.details');
 
 //cart update route for login user
-Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity']);
+Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity'])->name('cart.update.quantity');
 
 //checkout controller
 
