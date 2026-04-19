@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Frontend\CartController;
+use App\Http\Controllers\Frontend\CheckoutController;
 use App\Http\Controllers\Frontend\OrderController;
 use App\Http\Controllers\Frontend\ProductController2;
 
@@ -55,14 +56,24 @@ Route::post('/cart/update-quantity', [CartController::class, 'updateQuantity']);
 
 //checkout controller
 
-Route::get('/checkout', [OrderController::class, 'index'])->name('checkout');
+// Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
 // For order place(POST)
 Route::post('/order/place', [OrderController::class, 'store'])->name('order.place');
 
-// routes/web.php
-// Route::controller(CartController::class)->group(function () {
-//     Route::get('/api/cart-data', 'getCartData')->name('cart.data')->middleware('auth');
-// });
+// ==============================
+// Checkout & Order Routes
+// ==============================
+// Only Login User can Checkout
+Route::middleware(['auth'])->group(function () {
 
+    // Checkout page dynamic where order Summary shown
+    Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
+
+    // // Order place Route (Cash on Delivery)
+    // Route::post('/order/place', [OrderController::class, 'store'])->name('order.store');
+
+    // // If order Success show Thank YOu page.
+    // Route::get('/order/success/{order_number}', [OrderController::class, 'success'])->name('order.success');
+});
 require __DIR__ . '/auth.php';

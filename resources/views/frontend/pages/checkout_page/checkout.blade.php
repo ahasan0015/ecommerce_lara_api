@@ -2,66 +2,8 @@
 
 @section('title', 'Checkout')
 
-@section('styles')
-    <style>
-        body {
-            background-color: #f8f9fa;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-
-        .checkout-card {
-            border: none;
-            border-radius: 15px;
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-        }
-
-        .form-control,
-        .form-select {
-            border-radius: 8px;
-            padding: 12px;
-            border: 1px solid #dee2e6;
-        }
-
-        .form-control:focus {
-            box-shadow: 0 0 0 0.25 red rgba(0, 0, 0, 0.1);
-            border-color: #212529;
-        }
-
-        .list-group-item {
-            border: none;
-            padding: 15px 0;
-            border-bottom: 1px solid #eee;
-        }
-
-        .list-group-item:last-child {
-            border-bottom: none;
-        }
-
-        .payment-option {
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .payment-option:hover {
-            background-color: #f1f1f1;
-        }
-
-        .btn-complete {
-            padding: 15px;
-            font-size: 1.1rem;
-            font-weight: 600;
-            transition: transform 0.2s;
-        }
-
-        .btn-complete:hover {
-            transform: translateY(-2px);
-        }
-
-        .badge-count {
-            background-color: #212529;
-        }
-    </style>
-
+@section('css')
+<link rel="stylesheet" href="{{ asset('assets/css/check_out.css') }}">
 @endsection
 
 @section('content')
@@ -134,7 +76,7 @@
                             </div>
                         </div>
 
-                        <button class="w-100 btn btn-dark btn-lg rounded-pill mt-5 btn-complete" type="button">
+                        <button class="w-100 btn btn-primary btn-lg rounded-pill mt-5 btn-complete" type="button">
                             Complete Order <i class="fas fa-check-circle ms-2"></i>
                         </button>
                     </form>
@@ -145,50 +87,47 @@
                 <div class="card checkout-card p-4 sticky-top" style="top: 20px;">
                     <h4 class="d-flex justify-content-between align-items-center mb-4">
                         <span class="fw-bold">Order Summary</span>
-                        <span class="badge badge-count rounded-pill">2</span>
+                        <span class="badge badge-count rounded-pill">{{ $cartItems->count() }}</span>
                     </h4>
 
                     <ul class="list-group mb-3">
+                        @foreach($cartItems as $item)
                         <li class="list-group-item d-flex justify-content-between lh-sm">
                             <div class="d-flex">
                                 <div class="flex-shrink-0">
-                                    <img src="https://via.placeholder.com/50" class="rounded" alt="product">
+                                    {{-- ডাইনামিক ইমেজ লজিক --}}
+                                    @php 
+                                        $img = $item->variant->images->where('is_main', 1)->first() ?? $item->variant->images->first(); 
+                                     @endphp
+                <img src="{{ asset('storage/' . ($img->image ?? 'default.jpg')) }}" class="rounded" alt="product" width="50" height="50" style="object-fit: cover;">
                                 </div>
                                 <div class="ms-3">
-                                    <h6 class="my-0">Premium Black T-Shirt</h6>
-                                    <small class="text-muted">Size: L | Qty: 1</small>
+                                    <h6 class="my-0">{{ $item->variant->product->name }}</h6>
+                                    <small class="text-muted">
+                    Size: {{ $item->variant->size->name ?? 'N/A' }} | Qty: {{ $item->quantity }}
+                </small>
                                 </div>
                             </div>
-                            <span class="fw-semibold">৳ 450</span>
+                            <span class="fw-semibold">৳ {{ number_format($item->variant->sale_price * $item->quantity, 0) }}</span>
                         </li>
+                        @endforeach
 
-                        <li class="list-group-item d-flex justify-content-between lh-sm">
-                            <div class="d-flex">
-                                <div class="flex-shrink-0">
-                                    <img src="https://via.placeholder.com/50" class="rounded" alt="product">
-                                </div>
-                                <div class="ms-3">
-                                    <h6 class="my-0">Cotton Chino Pants</h6>
-                                    <small class="text-muted">Size: 32 | Qty: 1</small>
-                                </div>
-                            </div>
-                            <span class="fw-semibold">৳ 850</span>
-                        </li>
+                       
                     </ul>
 
                     <div class="mt-4">
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Subtotal</span>
-                            <span class="fw-bold">৳ 1300</span>
+                            <span class="fw-bold">৳ {{ number_format($subtotal, 0) }}</span>
                         </div>
                         <div class="d-flex justify-content-between mb-2">
                             <span class="text-muted">Shipping Fee</span>
-                            <span class="text-success">৳ 60</span>
+                            <span class="text-success">৳ {{ number_format($shippingFee, 0) }}</span>
                         </div>
                         <hr>
                         <div class="d-flex justify-content-between align-items-center">
                             <h5 class="fw-bold mb-0">Total</h5>
-                            <h4 class="text-danger fw-bold mb-0">৳ 1360</h4>
+                            <h4 class="text-danger fw-bold mb-0">৳ {{ number_format($total, 0) }}</h4>
                         </div>
                     </div>
                 </div>

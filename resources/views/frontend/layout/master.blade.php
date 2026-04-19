@@ -28,8 +28,8 @@
             padding: 40px 0;
         }
     </style>
-    <!-- @stack('css') -->
-    @yield('styles')
+    
+    @yield('css')
 </head>
 
 <body>

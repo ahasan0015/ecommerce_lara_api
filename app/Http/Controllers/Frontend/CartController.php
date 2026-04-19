@@ -103,7 +103,7 @@ class CartController extends Controller
         return response()->json(['status' => 'error', 'message' => 'Item not found'], 404);
     }
 
-    // Cart item quantity updta method
+    // Cart item quantity update method
     public function updateQuantity(Request $request)
     {
         // validation
@@ -141,12 +141,12 @@ class CartController extends Controller
     //cheackout cart-controller method
     public function getCartData()
     {
-        // ১. লগইন করা ইউজারের কার্ট আইটেম সংগ্রহ (Eager Loading সহ)
+        // Login customer cart item data collect
         $cartItems = Cart::where('user_id', auth()->id())
             ->with(['variant.product', 'variant.images'])
             ->get();
 
-        // ২. ডেটাকে ফরমেট করা যেন ফ্রন্টএন্ড সহজে পড়তে পারে
+        // date easier for frontend
         $formattedItems = $cartItems->map(function ($item) {
             return [
                 'id'         => $item->id,
@@ -161,7 +161,7 @@ class CartController extends Controller
             ];
         });
 
-        // ৩. JSON রেসপন্স পাঠানো
+        //JSON Response Send
         return response()->json([
             'status' => 'success',
             'items'  => $formattedItems,
