@@ -25,7 +25,7 @@ class CheckoutController extends Controller
 
         // চেক করার সময়ও items ব্যবহার করুন
         if (!$cart || $cart->items->count() === 0) {
-            return redirect()->route('home')->with('error', 'আপনার কার্ট খালি!');
+            return redirect()->route('dashboard')->with('error', 'Your Cart is Empty');
         }
 
         $cartItems = $cart->items;
