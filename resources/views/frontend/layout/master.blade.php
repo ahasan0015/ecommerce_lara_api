@@ -83,6 +83,20 @@
         }
     </script>
 
+    @if(session('success'))
+        <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        <script>
+            Swal.fire({
+                title: 'Order Placed!',
+                text: "{{ session('success') }}",
+                icon: 'success',
+                confirmButtonText: 'Great!',
+                confirmButtonColor: '#3085d6'
+            });
+        </script>
+    @endif
+
+
     @yield('js')
 </body>
 

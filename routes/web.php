@@ -71,9 +71,10 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/checkout', [CheckoutController::class, 'index'])->name('checkout');
 
     // // Order place Route (Cash on Delivery)
-    // Route::post('/order/place', [OrderController::class, 'store'])->name('order.store');
+    Route::post('/order/place', [OrderController::class, 'store'])->name('order.store');
 
     // // If order Success show Thank YOu page.
-    // Route::get('/order/success/{order_number}', [OrderController::class, 'success'])->name('order.success');
+    Route::get('/order/success/{order_number}', [OrderController::class, 'orderSuccess'])->name('order.success');
+    
 });
 require __DIR__ . '/auth.php';
