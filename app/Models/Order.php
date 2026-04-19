@@ -24,15 +24,22 @@ class Order extends Model
         return $this->belongsTo(User::class);
     }
 
-    // ২. এই অর্ডারের অধীনে কি কি আইটেম কেনা হয়েছে
+    //order items 
     public function items()
     {
         return $this->hasMany(OrderItem::class);
     }
 
-    // ৩. অর্ডারের বর্তমান স্ট্যাটাস কি (Pending/Processing ইত্যাদি)
+    // order status (Pending/Processing)
     public function status()
     {
         return $this->belongsTo(OrderStatus::class, 'order_status_id');
+    }
+
+    //ShippingAddress relation user_id
+    public function shippingAddress()
+    {
+
+        return $this->hasOne(ShippingAddress::class, 'user_id', 'user_id')->latest();
     }
 }

@@ -19,9 +19,13 @@
                     Continue Shopping
                 </a>
 
-                <a href="{{ route('dashboard') }}" class="btn btn-primary rounded-pill px-4 ms-2">
-                    Track Your Order
-                </a>
+                <div class="mt-4">
+                    {{-- <a href="{{ route('order.invoice.download_main', $order->order_number) }}" --}}
+                    <a href="{{ route('order.invoice.download_invoice', $order->order_number) }}"
+                        class="btn btn-success rounded-pill px-4">
+                        <i class="fas fa-file-pdf me-2"></i> Download Invoice
+                    </a>
+                </div>
             </div>
         </div>
     </div>
