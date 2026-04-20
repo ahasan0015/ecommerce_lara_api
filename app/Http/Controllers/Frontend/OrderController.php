@@ -96,7 +96,7 @@ class OrderController extends Controller
             ->with(['items.variant.product', 'items.variant.size', 'user'])
             ->firstOrFail();
 
-        $shipping = \App\Models\ShippingAddress::where('user_id', $order->user_id)
+        $shipping = ShippingAddress::where('user_id', $order->user_id)
             ->latest()
             ->first();
 

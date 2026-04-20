@@ -6,6 +6,7 @@ use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ColorController;
+use App\Http\Controllers\Api\OrderControllerAdmin;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductStatusController;
 use App\Http\Controllers\Api\RoleController;
@@ -18,6 +19,7 @@ use App\Http\Controllers\Api\ProductVariantController;
 | Public Routes
 |--------------------------------------------------------------------------
 */
+
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'login']);
 
@@ -29,9 +31,9 @@ Route::post('/admin/login', [AuthController::class, 'login']);
 Route::middleware('auth:sanctum')->group(function () {
 
     // Auth & User Management
-    Route::get('/user', [AuthController::class, 'user']); 
+    Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
-    
+
     Route::apiResource('users', UserController::class);
     Route::get('/roles', [RoleController::class, 'index']);
 
@@ -41,7 +43,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::apiResource('products', ProductController::class);
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
-    
+
     Route::get('product-statuses', [ProductStatusController::class, 'index']);
 
     // Product Variant Routes
@@ -50,5 +52,24 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/bulk-store', [ProductVariantController::class, 'storeBulkVariants']);
         Route::patch('/{id}/update-stock', [ProductVariantController::class, 'updateStock']);
         Route::delete('/{id}', [ProductVariantController::class, 'destroy']);
+    });
+
+    /*
+|--------------------------------------------------------------------------
+| Admin Order Management Routes
+|--------------------------------------------------------------------------
+*/
+
+    // protected admin route
+    Route::prefix('admin')->group(function () {
+
+        // To collect all orders
+        
+        //Each Order Details
+        Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);
+        Route::get('/orders', [OrderControllerAdmin::class, 'index']);
+
+        // order update
+        Route::put('/orders/{id}/status', [OrderControllerAdmin::class, 'updateStatus']);
     });
 });
