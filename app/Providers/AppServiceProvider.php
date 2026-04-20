@@ -2,6 +2,8 @@
 
 namespace App\Providers;
 
+use Dedoc\Scramble\Scramble;
+use Dedoc\Scramble\Support\Generator\SecurityScheme;
 use Illuminate\Pagination\Paginator;
 use Illuminate\Support\ServiceProvider;
 
@@ -10,17 +12,20 @@ class AppServiceProvider extends ServiceProvider
     /**
      * Register any application services.
      */
-    public function register(): void
-    {
-        
-    }
+    public function register(): void {}
 
     /**
      * Bootstrap any application services.
      */
     public function boot(): void
     {
-        // লারাভেলকে বলা হচ্ছে পাজিনেশনের জন্য বুটস্ট্র্যাপ ৫ এর স্টাইল ব্যবহার করতে
+        // Laravel pagination Bootstrap 5
         Paginator::useBootstrapFive();
+
+        Scramble::afterOpenApiGenerated(function ($openApi) {
+            $openApi->secure(
+                SecurityScheme::http('bearer')
+            );
+        });
     }
 }
