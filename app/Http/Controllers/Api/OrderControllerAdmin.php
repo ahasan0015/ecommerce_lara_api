@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Api;
 
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\Product;
 use App\Models\ProductVariant;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,11 +22,26 @@ class OrderControllerAdmin extends Controller
 
     public function show($id)
     {
-        // each order details
-        $order = Order::with(['user', 'items.product', 'items.variant'])->findOrFail($id);
-        return response()->json($order);
-    }
+        try {
+            // অর্ডার ডিটেইলস পেজে 'Order' মডেল লোড করতে হবে, 'Product' নয়
+            $order = Order::with([
+                'user',
+                'items.product',
+                'items.variant.size',
+                'items.variant.color'
+            ])->findOrFail($id);
 
+            return response()->json([
+                'success' => true,
+                'data'    => $order
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Order Not Found: ' . $e->getMessage()
+            ], 500);
+        }
+    }
     public function updateStatus(Request $request, $id)
     {
         $request->validate([

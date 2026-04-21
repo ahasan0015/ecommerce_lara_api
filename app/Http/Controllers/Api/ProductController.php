@@ -178,90 +178,70 @@ class ProductController extends Controller
     ///===updated store method try catch=====
     public function store(Request $request)
     {
-        // ১. ভ্যালিডেশন (নিশ্চিত করুন variants.*.images অ্যারে কি না)
+        // ১. ভ্যালিডেশন (SKU ইউনিকনেস চেক করা হচ্ছে)
         $request->validate([
-            'name'        => 'required|string|max:255',
-            'category_id' => 'required|integer',
-            'brand_id'    => 'required|integer',
-            'status_id'   => 'required|integer',
-            'variants'    => 'required|array|min:1',
-            'variants.*.sku'        => 'required|string',
-            'variants.*.sale_price' => 'required|numeric',
-            'variants.*.stock'      => 'required|integer',
+            'name'           => 'required|string|max:255',
+            'color_id'       => 'required|integer',
+            'main_image'     => 'required|image|mimes:jpeg,png,jpg,webp|max:2048',
+            'variants'       => 'required|array|min:1',
+            'variants.*.sku' => 'required|string|unique:product_variants,sku', // CRITICAL FIX
+        ], [
+            'variants.*.sku.unique' => 'The SKU ":input" has already been taken. Please use Auto-generate.',
         ]);
 
         try {
             return DB::transaction(function () use ($request) {
 
-                // ১️⃣ Insert Product
+                // Main Image Upload
+                $mainImagePath = $request->file('main_image')->store('products/main', 'public');
+
+                // ৩. Product Insert
                 $productId = DB::table('products')->insertGetId([
                     'name'        => $request->name,
                     'slug'        => Str::slug($request->name) . '-' . time(),
-                    'description' => $request->description,
                     'category_id' => $request->category_id,
                     'brand_id'    => $request->brand_id,
-                    'status_id'   => $request->status_id,
+                    'status_id'   => $request->status_id ?? 1,
                     'base_price'  => $request->base_price,
+                    'main_image'  => $mainImagePath,
+                    'description' => $request->description,
                     'created_at'  => now(),
                     'updated_at'  => now(),
                 ]);
 
-                // ২️⃣ Insert Variants
-                foreach ($request->variants as $index => $variantData) {
-
-                    $variantId = DB::table('product_variants')->insertGetId([
-                        'product_id' => $productId,
-                        'color_id'   => $variantData['color_id'] ?? null,
-                        'size_id'    => $variantData['size_id'] ?? null,
-                        'sku'        => $variantData['sku'],
-                        'status_id'  => $variantData['status_id'] ?? 1,
-                        'sale_price' => $variantData['sale_price'],
-                        'stock'      => $variantData['stock'],
-                        'created_at' => now(),
-                        'updated_at' => now(),
-                    ]);
-
-                    // ৩️⃣ Insert Variant Images (সরাসরি $request->file ব্যবহার করা হয়েছে)
-                    if ($request->hasFile("variants.{$index}.images")) {
-                        $images = $request->file("variants.{$index}.images");
-
-                        foreach ($images as $imgIndex => $file) {
-                            if ($file->isValid()) {
-                                $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-                                $path = $file->storeAs('products/variants', $filename, 'public');
-                                $isMain = ($index === 0 && $imgIndex === 0) ? 1 : 0;
-                                // ডাটাবেজে ইনসার্ট (সরাসরি কুয়েরি বিল্ডার)
-                                DB::table('product_images')->insert([
-                                    'product_variant_id' => $variantId,
-                                    'image'              => $path,
-                                    'is_main'            => $isMain,
-                                    'created_at'         => now(),
-                                    'updated_at'         => now(),
-                                ]);
-                            }
-                        }
+                // Image
+                if ($request->hasFile('gallery_images')) {
+                    foreach ($request->file('gallery_images') as $file) {
+                        $path = $file->store('products/gallery', 'public');
+                        DB::table('product_images')->insert([
+                            'product_id' => $productId,
+                            'image'      => $path,
+                            'is_main'    => 0,
+                            'created_at' => now(),
+                        ]);
                     }
                 }
 
-                return response()->json([
-                    'success'    => true,
-                    'message'    => 'Product and images saved successfully!',
-                    'product_id' => $productId
-                ], 201);
+                // Variant Insert With Global Color ID
+                foreach ($request->variants as $v) {
+                    DB::table('product_variants')->insert([
+                        'product_id' => $productId,
+                        'color_id'   => $request->color_id,
+                        'size_id'    => $v['size_id'],
+                        'sku'        => $v['sku'],
+                        'sale_price' => $v['sale_price'],
+                        'stock'      => $v['stock'],
+                        'status_id'  => 1,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+
+                return response()->json(['success' => true, 'message' => 'Product and variants created!'], 201);
             });
         } catch (\Exception $e) {
-            // কোনো এরর হলে সেটা কনসোলে দেখার জন্য
-            return response()->json([
-                'success' => false,
-                'message' => 'Database Error: ' . $e->getMessage()
-            ], 500);
+            return response()->json(['success' => false, 'message' => 'Database Error: ' . $e->getMessage()], 500);
         }
-    }
-
-    // Show Product
-    public function show($id)
-    {
-        return Product::with('brand', 'category', 'status', 'variants.images')->findOrFail($id);
     }
     //Update product Update method 
     public function update(Request $request, $id)
