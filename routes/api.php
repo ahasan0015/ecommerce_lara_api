@@ -66,8 +66,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // To collect all orders
         
         //Each Order Details
-        Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);
         Route::get('/orders', [OrderControllerAdmin::class, 'index']);
+        Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);
 
         // order update
         Route::put('/orders/{id}/status', [OrderControllerAdmin::class, 'updateStatus']);
