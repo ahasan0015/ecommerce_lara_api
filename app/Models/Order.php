@@ -42,4 +42,10 @@ class Order extends Model
 
         return $this->hasOne(ShippingAddress::class, 'user_id', 'user_id')->latest();
     }
+
+    // Order.php Model
+    public function paymentStatus()
+    {
+        return $this->belongsTo(PaymentStatus::class, 'payment_status_id');
+    }
 }

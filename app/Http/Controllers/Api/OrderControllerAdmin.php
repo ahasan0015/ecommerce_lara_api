@@ -23,9 +23,12 @@ class OrderControllerAdmin extends Controller
     public function show($id)
     {
         try {
-            // অর্ডার ডিটেইলস পেজে 'Order' মডেল লোড করতে হবে, 'Product' নয়
+
             $order = Order::with([
                 'user',
+                'shippingAddress',
+                'status', // Order (Pending/Processing)
+                'paymentStatus', // Order (Paid/Unpaid)
                 'items.product',
                 'items.variant.size',
                 'items.variant.color'

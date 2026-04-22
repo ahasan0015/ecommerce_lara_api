@@ -178,7 +178,7 @@ class ProductController extends Controller
     ///===updated store method try catch=====
     public function store(Request $request)
     {
-        // ১. ভ্যালিডেশন (SKU ইউনিকনেস চেক করা হচ্ছে)
+        // SKU Validation Check
         $request->validate([
             'name'           => 'required|string|max:255',
             'color_id'       => 'required|integer',
