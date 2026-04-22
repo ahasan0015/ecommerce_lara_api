@@ -11,7 +11,7 @@ use Illuminate\Support\Facades\Validator;
 class BrandController extends Controller
 {
     /**
-     * ১. সব ব্র্যান্ডের লিস্ট (Status নামসহ)
+     * All Brand index
      */
     public function index()
     {
@@ -30,9 +30,6 @@ class BrandController extends Controller
         );
     }
 
-    /**
-     * ২. নতুন ব্র্যান্ড সেভ করা (ইমেজ আপলোডসহ)
-     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -47,7 +44,6 @@ class BrandController extends Controller
 
         $logoPath = null;
         if ($request->hasFile('logo')) {
-            // storage/app/public/brands ফোল্ডারে সেভ হবে
             $logoPath = $request->file('logo')->store('brands', 'public');
         }
 
@@ -63,7 +59,7 @@ class BrandController extends Controller
     }
 
     /**
-     * ৩. নির্দিষ্ট একটি ব্র্যান্ডের ডিটেইলস
+     * brand Show
      */
     public function show($id)
     {
@@ -78,7 +74,7 @@ class BrandController extends Controller
     }
 
     /**
-     * ৪. ব্র্যান্ড আপডেট করা (পুরনো লোগো ডিলিট লজিকসহ)
+     * Brand Update
      */
     public function update(Request $request, $id)
     {
@@ -98,7 +94,7 @@ class BrandController extends Controller
         $logoPath = $brand->logo;
 
         if ($request->hasFile('logo')) {
-            // নতুন ফাইল আসলে পুরনো ফাইল ডিলিট করা
+           
             if ($brand->logo) {
                 Storage::disk('public')->delete($brand->logo);
             }
@@ -116,7 +112,7 @@ class BrandController extends Controller
     }
 
     /**
-     * ৫. ব্র্যান্ড ডিলিট করা
+     * brand delete
      */
     public function destroy($id)
     {

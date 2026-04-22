@@ -89,7 +89,68 @@ class ProductController extends Controller
             'total'        => $products->total(),
         ]);
     }
+    // Get Single Product Details
+    public function show($id)
+    {
+        try {
+            $product = DB::table('products')
+                ->select(
+                    'products.id',
+                    'products.name',
+                    'products.slug',
+                    'products.description',
+                    'products.base_price',
+                    'products.main_image',
+                    'categories.name as category_name',
+                    'brands.name as brand_name',
+                    'product_statuses.name as status_name',
+                    'products.category_id',
+                    'products.brand_id',
+                    'products.status_id'
+                )
+                ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+                ->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
+                ->leftJoin('product_statuses', 'products.status_id', '=', 'product_statuses.id')
+                ->where('products.id', $id)
+                ->first();
 
+            if (!$product) {
+                return response()->json(['success' => false, 'message' => 'Product not found'], 404);
+            }
+
+            $gallery = DB::table('product_images')
+                ->select('image', 'is_main')
+                ->where('product_id', $id)
+                ->get();
+
+            $variants = DB::table('product_variants')
+                ->select(
+                    'product_variants.id',
+                    'product_variants.sku',
+                    'product_variants.sale_price',
+                    'product_variants.stock',
+                    'colors.name as color_name',
+                    'sizes.name as size_name'
+                )
+                ->leftJoin('colors', 'product_variants.color_id', '=', 'colors.id')
+                ->leftJoin('sizes', 'product_variants.size_id', '=', 'sizes.id')
+                ->where('product_variants.product_id', $id)
+                ->get();
+
+            $product->gallery = $gallery;
+            $product->variants = $variants;
+
+            return response()->json([
+                'success' => true,
+                'data' => $product
+            ], 200);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Server Error: ' . $e->getMessage()
+            ], 500);
+        }
+    }
 
 
     //======store method using DB::table=========
@@ -246,56 +307,77 @@ class ProductController extends Controller
     //Update product Update method 
     public function update(Request $request, $id)
     {
-        $product = Product::findOrFail($id);
+        // ১. ফাইন্ড প্রোডাক্ট
+        $product = Product::find($id);
 
-        // ১. validation
+        if (!$product) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Product not found'
+            ], 404);
+        }
+
+        // ২. ভ্যালিডেশন
         $request->validate([
             'name'        => 'required|string|max:200',
             'brand_id'    => 'required|exists:brands,id',
             'category_id' => 'required|exists:categories,id',
             'status_id'   => 'required|exists:product_statuses,id',
             'base_price'  => 'required|numeric',
-            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // photo size 5 mb max
+            'image'       => 'nullable|image|mimes:jpeg,png,jpg,webp|max:5120', // ৫ এমবি ম্যাক্স
+            'description' => 'nullable|string',
         ]);
 
-        // ২. Image Processing
-        if ($request->hasFile('image')) {
-            // if new image append old image deleted
-            if ($product->image && Storage::disk('public')->exists($product->image)) {
-                Storage::disk('public')->delete($product->image);
-            }
+        try {
+            return DB::transaction(function () use ($request, $product) {
 
-            $image = $request->file('image');
-            $manager = new ImageManager(new Driver());
-            $imageName = 'product_' . time() . '.webp'; // photo save .webp formate
+                $imagePath = $product->main_image;
 
-            // image resize (1200x1200) convert
-            $img = $manager->read($image);
-            $img->cover(1200, 1200); // central crop and resize
-            $encoded = $img->toWebp(85); // 85% quality webp
 
-            // Save to storage
-            Storage::disk('public')->put('products/' . $imageName, (string) $encoded);
-            $product->image = 'products/' . $imageName;
+                if ($request->hasFile('image')) {
+
+                    if ($product->main_image && Storage::disk('public')->exists($product->main_image)) {
+                        Storage::disk('public')->delete($product->main_image);
+                    }
+
+                    $image = $request->file('image');
+                    $manager = new ImageManager(new Driver());
+                    $imageName = 'product_' . time() . '_' . uniqid() . '.webp';
+
+
+                    $img = $manager->read($image);
+                    $img->cover(1000, 1000);
+                    $encoded = $img->toWebp(85);
+
+
+                    $path = 'products/main/' . $imageName;
+                    Storage::disk('public')->put($path, (string) $encoded);
+                    $imagePath = $path;
+                }
+
+                $product->update([
+                    'name'        => $request->name,
+                    'slug'        => Str::slug($request->name) . '-' . $product->id,
+                    'brand_id'    => $request->brand_id,
+                    'category_id' => $request->category_id,
+                    'status_id'   => $request->status_id,
+                    'description' => $request->description,
+                    'base_price'  => $request->base_price,
+                    'main_image'  => $imagePath,
+                ]);
+
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Product updated successfully!',
+                    'data'    => $product
+                ], 200);
+            });
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Update failed: ' . $e->getMessage()
+            ], 500);
         }
-
-        // ৩. Product Data update
-        $product->update([
-            'name'        => $request->name,
-            'slug'        => Str::slug($request->name) . '-' . $product->id, // add product id to make slug uniqe
-            'brand_id'    => $request->brand_id,
-            'category_id' => $request->category_id,
-            'status_id'   => $request->status_id,
-            'description' => $request->description,
-            'base_price'  => $request->base_price,
-            'image'       => $product->image, //Update image path
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Product updated successfully',
-            'data'    => $product
-        ]);
     }
     // Update Product
     // public function update(Request $request, $id)
