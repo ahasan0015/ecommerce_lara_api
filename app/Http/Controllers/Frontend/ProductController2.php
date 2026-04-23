@@ -8,14 +8,18 @@ use Illuminate\Http\Request;
 
 class ProductController2 extends Controller
 {
-    public function index()
+    public function tshirt()
     {
-        // Only Mens T-Shirt Category data filter
         $products = Product::whereHas('category', function ($query) {
             $query->where('name', 'Mens T-Shirt');
-        })->with(['variants.images', 'category'])->get();
+        })
+            ->with([
+                'category',
+                'variants.size',
+                'images'
+            ])
+            ->get();
 
-        // dd($products);
         return view('frontend.pages.tshirts', compact('products'));
     }
 
@@ -25,7 +29,13 @@ class ProductController2 extends Controller
         // Only 'Mens Panjabi' Category product filter
         $products = Product::whereHas('category', function ($query) {
             $query->where('name', 'Mens Panjabi');
-        })->with(['variants.images', 'category'])->get();
+        })->with([
+            'category',
+            'variants.size',
+            'images'
+        ])->get();
+
+        // dd($products);
 
         return view('frontend.pages.panjabi', compact('products'));
     }
@@ -33,10 +43,15 @@ class ProductController2 extends Controller
     //women Collection
     public function pakistaniDress()
     {
-        // Only 'Pakistani Dress' Category product filter
         $products = Product::whereHas('category', function ($query) {
             $query->where('name', 'Pakistani Dress');
-        })->with(['variants.images', 'category'])->get();
+        })
+            ->with([
+                'category',
+                'variants.size',
+                'images'
+            ])
+            ->get();
 
         return view('frontend.pages.women.pakistanidress', compact('products'));
     }

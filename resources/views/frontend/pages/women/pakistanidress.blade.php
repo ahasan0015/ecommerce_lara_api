@@ -3,88 +3,148 @@
 @section('title', 'Pakistani Dress Collection')
 
 @section('content')
-<section class="container my-5">
-    <h2 class="text-center fw-bold mb-4">
-        {{ $products->first()->category->name ?? 'Pakistani Dress Collection' }}
-    </h2>
+    <section class="container my-4 my-md-5">
+        <h2 class="text-center fw-bold mb-3 mb-md-4 fs-3 fs-md-2">
+            {{ $products->first()->category->name ?? 'Pakistani Dress Collection' }}
+        </h2>
 
-    <div class="row g-4">
-        @forelse($products as $product)
-        <div class="col-lg-3 col-md-4 col-sm-6">
-            <div class="card h-100 shadow-sm border-0 product-card">
+        <div class="row g-3 g-md-4">
+            @forelse($products as $product)
+                <div class="col-6 col-md-4 col-lg-3">
+                    <div class="card h-100 shadow-sm border-0 product-card overflow-hidden">
 
-                @php
-                $firstVariant = $product->variants->first();
-                $mainImage = optional($firstVariant)->images->where('is_main', 1)->first()
-                ?? optional($firstVariant)->images->first();
-                $imagePath = $mainImage ? asset('storage/' . $mainImage->image) : asset('assets/images/placeholder.jpg');
+                        @php
+                            $firstVariant = $product->variants->first();
 
-                // ভেরিয়েন্ট থেকে সাইজ সংগ্রহ করা
-                $availableSizes = $product->variants->map(function($v) {
-                return [
-                'id' => $v->id,
-                'size_name' => optional($v->size)->name ?? 'N/A'
-                ];
-                })->toArray();
-                @endphp
+                            // Image Logic: Main -> Gallery -> Placeholder
+                            if ($product->main_image) {
+                                $imagePath = asset('storage/' . $product->main_image);
+                            } elseif ($product->images->count() > 0) {
+                                $imagePath = asset('storage/' . $product->images->first()->image);
+                            } else {
+                                $imagePath = asset('assets/images/placeholder.jpg');
+                            }
 
-                <a href="{{ route('product.details', $product->id) }}">
-                    <img src="{{ $imagePath }}" alt="{{ $product->product_name }}" class="card-img-top" style="height: 280px; object-fit: cover;">
-                </a>
+                            // Variants to Size Map
+                            $availableSizes = $product->variants->map(function ($v) {
+                                return [
+                                    'id' => $v->id,
+                                    'size_name' => optional($v->size)->name ?? 'N/A'
+                                ];
+                            })->toArray();
 
-                <div class="card-body text-center">
-                    <a href="{{ route('product.details', $product->id) }}" class="text-decoration-none text-dark">
-                        <h5 class="card-title h6 fw-bold mb-1">{{ $product->product_name ?? $product->name }}</h5>
-                    </a>
-                    <p class="text-muted small mb-2 text-uppercase">Exclusive Pakistani Collection</p>
-                    <h6 class="fw-bold text-danger">
-                        ৳ {{ number_format($firstVariant->sale_price ?? 0, 0) }}
-                    </h6>
+                            $salePrice = $firstVariant->sale_price ?? 0;
+                        @endphp
+
+                        <a href="{{ route('product.details', $product->id) }}" class="d-block bg-light">
+                            <img src="{{ $imagePath }}" alt="{{ $product->name }}" 
+                                 class="card-img-top product-img"
+                                 style="width: 100%; object-fit: cover;">
+                        </a>
+
+                        <div class="card-body text-center p-2 p-md-3">
+                            <a href="{{ route('product.details', $product->id) }}" class="text-decoration-none text-dark">
+                                <h5 class="card-title h6 fw-bold mb-1 text-truncate">{{ $product->name }}</h5>
+                            </a>
+                            <p class="text-muted mb-2 d-none d-sm-block" style="font-size: 0.7rem;">PAKISTANI COLLECTION</p>
+                            <h6 class="fw-bold text-danger mb-0">
+                                ৳ {{ number_format($salePrice, 0) }}
+                            </h6>
+                        </div>
+
+                        <div class="card-footer bg-white border-0 pb-3 pt-0 px-2 px-md-3">
+                            <button class="btn btn-dark w-100 rounded-pill py-2 btn-cart-responsive" 
+                                data-id="{{ $product->id }}"
+                                data-name="{{ $product->name }}" 
+                                data-price="{{ $salePrice }}"
+                                data-sizes="{{ json_encode($availableSizes) }}" 
+                                onclick="openSizeModal(this)">
+                                <small class="fw-bold">Add to Cart</small>
+                            </button>
+                        </div>
+                    </div>
                 </div>
+            @empty
+                <div class="col-12 text-center py-5">
+                    <h4 class="text-muted">No Pakistani Dress found in this collection.</h4>
+                </div>
+            @endforelse
+        </div>
+    </section>
 
-                <div class="card-footer bg-white border-0 pb-3">
-                    <button
-                        class="btn btn-dark w-100 rounded-pill"
-                        data-id="{{ $product->id }}"
-                        data-name="{{ $product->product_name ?? $product->name }}"
-                        data-price="{{ $firstVariant->sale_price ?? 0 }}"
-                        data-sizes="{{ json_encode($availableSizes) }}"
-                        onclick="openSizeModal(this)">
-                        Add to Cart
-                    </button>
+    <div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 shadow">
+                <div class="modal-header border-0 pb-0">
+                    <h5 class="modal-title fw-bold w-100 text-center" id="sizeModalLabel">Select Size</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body text-center">
+                    <p id="modalProductName" class="fw-semibold text-muted mb-3 small"></p>
+                    <div class="d-flex justify-content-center flex-wrap gap-3 mb-3" id="sizeOptions"></div>
+                </div>
+                <div class="modal-footer border-0 justify-content-center pb-4">
+                    <button type="button" id="confirmAddToCart" class="btn btn-dark rounded-pill px-5 py-2">Confirm Add</button>
                 </div>
             </div>
         </div>
-        @empty
-        <div class="col-12 text-center my-5">
-            <h4 class="text-muted">No Pakistani Dress found in this collection.</h4>
-        </div>
-        @endforelse
     </div>
-</section>
+@endsection
 
-<div class="modal fade" id="sizeModal" tabindex="-1" aria-labelledby="sizeModalLabel" aria-hidden="true">
-    <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header border-0">
-                <h5 class="modal-title fw-bold" id="sizeModalLabel">Select Your Size</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body text-center">
-                <p id="modalProductName" class="fw-semibold text-muted mb-3"></p>
-                <div class="d-flex justify-content-center flex-wrap gap-2 mb-3" id="sizeOptions">
-                </div>
-            </div>
-            <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" id="confirmAddToCart" class="btn btn-dark rounded-pill px-5 py-2">Confirm Add to Cart</button>
-            </div>
-        </div>
-    </div>
-</div>
+@section('styles')
+    <style>
+        /* Responsive Product Image Height */
+        .product-img {
+            height: 200px; /* Mobile */
+        }
+        @media (min-width: 768px) {
+            .product-img {
+                height: 280px; /* Tablet/Desktop */
+            }
+        }
+
+        .product-card {
+            transition: transform 0.3s ease;
+        }
+        @media (min-width: 992px) {
+            .product-card:hover {
+                transform: translateY(-5px);
+            }
+        }
+
+        /* Better touch targets for sizes */
+        .btn-outline-dark {
+            min-width: 60px;
+            border-radius: 8px;
+        }
+
+        .btn-check:checked+.btn-outline-dark {
+            background-color: #212529;
+            color: #fff;
+        }
+
+        /* Small mobile screens adjustment */
+        @media (max-width: 360px) {
+            .btn-cart-responsive small {
+                font-size: 10px;
+            }
+            .product-img {
+                height: 170px;
+            }
+        }
+    </style>
 @endsection
 
 @section('js')
- <script>
+    <script>
+        // Your existing JS logic remains exactly the same 
+        // (Copy the script section from your previous version here)
+        // Ensure addToDatabaseCart and addToLocalStorageCart are included.
+    </script>
+@endsection
+
+@section('js')
+    <script>
         let selectedProductData = null;
 
         function openSizeModal(button) {
@@ -114,12 +174,12 @@
             if (Array.isArray(sizes) && sizes.length > 0) {
                 sizes.forEach(item => {
                     sizeHtml += `
-                                <div class="m-1">
-                                    <input type="radio" class="btn-check" name="productSize" 
-                                           id="v_${item.id}" value="${item.size_name}" data-variant-id="${item.id}" autocomplete="off">
-                                    <label class="btn btn-outline-dark px-3 py-2" for="v_${item.id}">${item.size_name}</label>
-                                </div>
-                            `;
+                                    <div class="m-1">
+                                        <input type="radio" class="btn-check" name="productSize" 
+                                               id="v_${item.id}" value="${item.size_name}" data-variant-id="${item.id}" autocomplete="off">
+                                        <label class="btn btn-outline-dark px-3 py-2" for="v_${item.id}">${item.size_name}</label>
+                                    </div>
+                                `;
                 });
             } else {
                 sizeHtml = '<p class="text-danger">Out of stock!</p>';
@@ -218,20 +278,3 @@
     </script>
 @endsection
 
-@section('styles')
-<style>
-    .product-card {
-        transition: transform 0.3s ease;
-    }
-
-    .product-card:hover {
-        transform: translateY(-5px);
-    }
-
-    /* রেডিও বাটনের ডিজাইন কাস্টমাইজেশন */
-    .btn-check:checked+.btn-outline-dark {
-        background-color: #212529;
-        color: #fff;
-    }
-</style>
-@endsection

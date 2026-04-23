@@ -30,7 +30,7 @@ Route::get('/pant', function () {
 })->name('pant.page');
 
 
-Route::get('/tshirts', [ProductController2::class, 'index'])->name('tshirts.index');
+Route::get('/tshirts', [ProductController2::class, 'tshirt'])->name('tshirts.index');
 Route::get('/men-panjabi', [ProductController2::class, 'panjabi'])->name('panjabi.index');
 Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->name('pakistani.dress');
 
