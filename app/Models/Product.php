@@ -3,15 +3,19 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Product extends Model
 {
+    use SoftDeletes;
+    protected $dates = ['deleted_at'];
     protected $fillable = [
         'category_id',
         'brand_id',
         'status_id',
         'name',
         'slug',
+        'main_image',
         'description',
         'base_price',
     ];
@@ -38,6 +42,6 @@ class Product extends Model
 
     public function images()
     {
-              return $this->hasMany(ProductImage::class, 'product_id');
+        return $this->hasMany(ProductImage::class, 'product_id');
     }
 }

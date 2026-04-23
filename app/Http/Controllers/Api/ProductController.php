@@ -35,7 +35,7 @@ class ProductController extends Controller
     // }
     public function index()
     {
-        // 1️⃣ Main product data with category, brand, status
+        // 1️⃣ Main product data (Added whereNull for Soft Delete)
         $products = DB::table('products')
             ->select(
                 'products.id as product_id',
@@ -49,10 +49,12 @@ class ProductController extends Controller
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
             ->leftJoin('product_statuses', 'products.status_id', '=', 'product_statuses.id')
+            // 👇 এই লাইনটিই ম্যাজিক করবে! সফট ডিলিট হওয়া প্রোডাক্টগুলো বাদ দিবে।
+            ->whereNull('products.deleted_at')
             ->orderBy('products.created_at', 'desc')
             ->paginate(10);
 
-        // 2️⃣ Loop through products to get variants + images
+        // 2️⃣ Loop for variants (আপনার কোডটি ঠিক আছে)
         foreach ($products as $product) {
             $variants = DB::table('product_variants')
                 ->select(
@@ -73,17 +75,14 @@ class ProductController extends Controller
                     ->select('image', 'is_main')
                     ->where('product_variant_id', $variant->variant_id)
                     ->get();
-
                 $variant->images = $images;
             }
-
             $product->variants = $variants;
         }
 
-        // 3️⃣ Return as JSON
         return response()->json([
             'success'      => true,
-            'data'         => $products->items(), // শুধু product array
+            'data'         => $products->items(),
             'current_page' => $products->currentPage(),
             'last_page'    => $products->lastPage(),
             'total'        => $products->total(),
@@ -409,8 +408,12 @@ class ProductController extends Controller
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
-        $product->delete();
 
-        return response()->json(['message' => 'Product deleted']);
+        // প্রোডাক্টের সব ভেরিয়েন্টকে ইন-অ্যাক্টিভ বা ডিলিট করতে চাইলে (যদি ভেরিয়েন্টেও SoftDelete থাকে)
+        // $product->variants()->delete(); 
+
+        $product->delete(); // মেইন প্রোডাক্ট সফট ডিলিট
+
+        return response()->json(['success' => true, 'message' => 'Product moved to trash!']);
     }
 }
