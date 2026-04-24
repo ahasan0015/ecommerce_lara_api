@@ -73,7 +73,7 @@ class ProductVariantController extends Controller
     }
 
     /**
-     * স্টক আপডেট করা
+     * Stock Update
      */
     public function updateStock(Request $request, $id)
     {
@@ -85,7 +85,7 @@ class ProductVariantController extends Controller
     }
 
     /**
-     * ডিলিট করা
+     * delete
      */
     public function destroy($id)
     {

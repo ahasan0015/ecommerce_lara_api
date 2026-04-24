@@ -49,12 +49,11 @@ class ProductController extends Controller
             ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
             ->leftJoin('brands', 'products.brand_id', '=', 'brands.id')
             ->leftJoin('product_statuses', 'products.status_id', '=', 'product_statuses.id')
-            // 👇 এই লাইনটিই ম্যাজিক করবে! সফট ডিলিট হওয়া প্রোডাক্টগুলো বাদ দিবে।
             ->whereNull('products.deleted_at')
             ->orderBy('products.created_at', 'desc')
             ->paginate(10);
 
-        // 2️⃣ Loop for variants (আপনার কোডটি ঠিক আছে)
+        // 2️⃣ Loop for variants
         foreach ($products as $product) {
             $variants = DB::table('product_variants')
                 ->select(
@@ -152,89 +151,6 @@ class ProductController extends Controller
     }
 
 
-    //======store method using DB::table=========
-    // public function store(Request $request)
-    // {
-    //     $request->validate([
-    //         'name'        => 'required|string|max:255',
-    //         'category_id' => 'required|integer',
-    //         'brand_id'    => 'required|integer',
-    //         'status_id'   => 'required|integer',
-    //         'description' => 'nullable|string',
-
-    //         'variants' => 'required|array|min:1',
-    //         'variants.*.sku' => 'required|string',
-    //         'variants.*.status_id' => 'required|integer',
-    //         'variants.*.sale_price' => 'required|numeric',
-    //         'variants.*.stock' => 'required|integer',
-    //         'variants.*.images'   => 'nullable|array',
-    //         'variants.*.images.*' => 'required|image|mimes:jpeg,png,jpg,gif|max:2048',
-    //     ]);
-
-    //     return DB::transaction(function () use ($request) {
-
-    //         // 1️⃣ Insert Product
-    //         $productId = DB::table('products')->insertGetId([
-    //             'name'        => $request->name,
-    //             'slug'        => Str::slug($request->name) . '-' . time(),
-    //             'description' => $request->description,
-    //             'category_id' => $request->category_id,
-    //             'brand_id'    => $request->brand_id,
-    //             'status_id'   => $request->status_id,
-    //             'base_price'   => $request->base_price,
-    //             'created_at'  => now(),
-    //             'updated_at'  => now(),
-    //         ]);
-
-    //         // 2️⃣ Insert Variants
-    //         foreach ($request->variants as $index => $variantData) {
-
-    //             $variantId = DB::table('product_variants')->insertGetId([
-    //                 'product_id' => $productId,
-    //                 'color_id'   => $variantData['color_id'] ?? null,
-    //                 'size_id'    => $variantData['size_id'] ?? null,
-    //                 'sku'        => $variantData['sku'],
-    //                 'status_id'  => $variantData['status_id'],
-    //                 'sale_price' => $variantData['sale_price'],
-    //                 'stock'      => $variantData['stock'],
-    //                 'created_at' => now(),
-    //                 'updated_at' => now(),
-    //             ]);
-
-    //             // 3️⃣ Insert Variant Images
-
-    //             if ($request->hasFile("variants.{$index}.images")) {
-    //                 $files = $request->file("variants.{$index}.images");
-
-    //                 foreach ($files as $file) {
-    //                     if ($file->isValid()) {
-    //                         // ফাইলের নাম ইউনিক করা (uniqid ব্যবহার করা হয়েছে যাতে ওভাররাইট না হয়)
-    //                         $filename = Str::slug($request->name) . '-' . uniqid() . '.' . $file->getClientOriginalExtension();
-
-    //                         // স্টোরেজে সেভ করা
-    //                         $path = $file->storeAs('products/variants', $filename, 'public');
-
-    //                         // ডাটাবেজে ইনসার্ট
-    //                         DB::table('product_images')->insert([
-    //                             'product_variant_id' => $variantId,
-    //                             'image'              => $path,
-    //                             'is_main'            => 0,
-    //                             'created_at'         => now(),
-    //                             'updated_at'         => now(),
-    //                         ]);
-    //                     }
-    //                 }
-    //             }
-    //         }
-
-    //         return response()->json([
-    //             'success' => true,
-    //             'message' => 'Product created successfully',
-    //             'product_id' => $productId
-    //         ], 201);
-    //     });
-    // }
-
     ///===updated store method try catch=====
     public function store(Request $request)
     {
@@ -306,7 +222,6 @@ class ProductController extends Controller
     //Update product Update method 
     public function update(Request $request, $id)
     {
-        // ১. ফাইন্ড প্রোডাক্ট
         $product = Product::find($id);
 
         if (!$product) {
@@ -316,7 +231,7 @@ class ProductController extends Controller
             ], 404);
         }
 
-        // ২. ভ্যালিডেশন
+
         $request->validate([
             'name'        => 'required|string|max:200',
             'brand_id'    => 'required|exists:brands,id',
@@ -378,42 +293,49 @@ class ProductController extends Controller
             ], 500);
         }
     }
-    // Update Product
-    // public function update(Request $request, $id)
-    // {
-    //     $product = Product::findOrFail($id);
-
-    //     $request->validate([
-    //         'name' => 'required|string|max:200',
-    //         'brand_id' => 'required|exists:brands,id',
-    //         'category_id' => 'required|exists:categories,id',
-    //         'status_id' => 'required|exists:product_status,id',
-    //         'base_price' => 'required|numeric'
-    //     ]);
-
-    //     $product->update([
-    //         'name' => $request->name,
-    //         'slug' => Str::slug($request->name),
-    //         'brand_id' => $request->brand_id,
-    //         'category_id' => $request->category_id,
-    //         'status_id' => $request->status_id,
-    //         'description' => $request->description,
-    //         'base_price' => $request->base_price
-    //     ]);
-
-    //     return response()->json($product);
-    // }
 
     // Delete Product
     public function destroy($id)
     {
         $product = Product::findOrFail($id);
 
-        // প্রোডাক্টের সব ভেরিয়েন্টকে ইন-অ্যাক্টিভ বা ডিলিট করতে চাইলে (যদি ভেরিয়েন্টেও SoftDelete থাকে)
-        // $product->variants()->delete(); 
 
-        $product->delete(); // মেইন প্রোডাক্ট সফট ডিলিট
+        $product->variants()->delete();
+
+        $product->delete();
 
         return response()->json(['success' => true, 'message' => 'Product moved to trash!']);
+    }
+
+    //TrashLish
+
+    public function trashList()
+    {
+        $products = DB::table('products')
+            ->select('products.id as product_id', 'products.name as product_name', 'categories.name as category_name', 'products.deleted_at')
+            ->leftJoin('categories', 'products.category_id', '=', 'categories.id')
+            ->whereNotNull('products.deleted_at') 
+            ->get();
+
+        return response()->json(['success' => true, 'data' => $products]);
+    }
+
+    // Restore Product
+    public function restore($id)
+    {
+        $restore = DB::table('products')
+            ->where('id', $id)
+            ->update(['deleted_at' => null]);
+
+        return response()->json(['success' => true, 'message' => 'Product restored successfully!']);
+    }
+
+    // Permant Delete Product
+    public function forceDelete($id)
+    {
+
+        DB::table('products')->where('id', $id)->delete();
+
+        return response()->json(['success' => true, 'message' => 'Product deleted permanently!']);
     }
 }

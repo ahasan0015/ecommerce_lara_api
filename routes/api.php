@@ -40,6 +40,12 @@ Route::middleware('auth:sanctum')->group(function () {
     // Inventory & Catalog
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
+    // Trash Product
+    Route::get('products/trash', [ProductController::class, 'trashList']);
+    // Restore Product
+    Route::post('products/{id}/restore', [ProductController::class, 'restore']);
+    //Parmanent delete (Hard Delete)
+    Route::delete('products/{id}/force-delete', [ProductController::class, 'forceDelete']);
     Route::apiResource('products', ProductController::class);
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
@@ -64,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::prefix('admin')->group(function () {
 
         // To collect all orders
-        
+
         //Each Order Details
         Route::get('/orders', [OrderControllerAdmin::class, 'index']);
         Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);

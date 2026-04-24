@@ -39,7 +39,7 @@ class UserController extends Controller
         // 3. User Creation
         $user = User::create([
 
-            'name'          => $validatedData['name'],
+            'name'       => $validatedData['name'],
             'email'      => $validatedData['email'],
             'phone'      => $request->phone,
             'password'   => Hash::make($request->password), // Always hash your passwords!
