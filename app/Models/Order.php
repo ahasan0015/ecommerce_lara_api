@@ -16,6 +16,7 @@ class Order extends Model
         'discount',
         'total',
         'payment_method',
+        'shipping_charge',
         'payment_status_id'
     ];
 

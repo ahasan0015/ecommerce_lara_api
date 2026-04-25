@@ -193,6 +193,7 @@ CREATE TABLE shipping_addresses (
     phone VARCHAR(20),
     address TEXT,
     city VARCHAR(100),
+    thana VARCHAR(100),
     postal_code VARCHAR(20),
     country VARCHAR(100)
 );

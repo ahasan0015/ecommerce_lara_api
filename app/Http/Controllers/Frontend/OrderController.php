@@ -20,9 +20,12 @@ class OrderController extends Controller
     {
         $request->validate([
             'name'    => 'required|string',
-            'phone'   => 'required',
+            'phone'   => ['required', 'regex:/^(?:\+88|88)?(01[3-9]\d{8})$/'],
             'address' => 'required',
             'city'    => 'required',
+            'thana'   => 'required',
+        ], [
+            'phone.regex' => 'Please provide a valid 11-digit mobile number',
         ]);
 
         $cart = Cart::where('user_id', Auth::id())->with('items.variant')->first();
@@ -33,45 +36,51 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            // shipping address save
-            $shipping = ShippingAddress::create([
+            $shippingCharge = ($request->city === 'Dhaka') ? 60 : 150;
+
+            $cleanPhone = preg_replace('/^(?:\+88|88)/', '', $request->phone);
+
+            // ২. Shipping Address Save
+            ShippingAddress::create([
                 'user_id'     => Auth::id(),
                 'name'        => $request->name,
-                'phone'       => $request->phone,
+                'phone'       => $cleanPhone,
                 'address'     => $request->address,
                 'city'        => $request->city,
+                'thana'       => $request->thana,
                 'postal_code' => $request->postal_code ?? '1200',
                 'country'     => 'Bangladesh',
             ]);
 
-            //calculation
-            $subtotal = $cart->items->sum(fn($item) => $item->variant->sale_price * $item->quantity);
-            $total = $subtotal + 60; //shipping charge
 
-            // Order Create
+            $subtotal = $cart->items->sum(fn($item) => $item->variant->sale_price * $item->quantity);
+            $total = $subtotal + $shippingCharge; // এখানে চার্জ যোগ হবে
+
+            // ৪. Order Create
             $order = Order::create([
                 'user_id'           => Auth::id(),
                 'order_status_id'   => 1,
-                'payment_status_id' => 1, // <--- এটি যোগ করুন (১ = Unpaid)
+                'payment_status_id' => 1,
                 'order_number'      => 'ORD-' . strtoupper(Str::random(10)),
                 'subtotal'          => $subtotal,
+                'shipping_charge'   => $shippingCharge,
                 'discount'          => 0,
                 'total'             => $total,
-                'payment_method'    => $request->payment_method, // রেডিও বাটনের ভ্যালু ধরুন
+                'payment_method'    => $request->payment_method,
             ]);
 
-            //Order Item Loop
+            // ৫. Order Item Loop
             foreach ($cart->items as $item) {
                 OrderItem::create([
                     'order_id'           => $order->id,
                     'product_id'         => $item->variant->product_id,
-                    'product_variant_id' => $item->variant_id, // <--- কলামের নাম আপনার মাইগ্রেশন অনুযায়ী দিন
+                    'product_variant_id' => $item->variant_id,
                     'quantity'           => $item->quantity,
                     'price'              => $item->variant->sale_price,
                 ]);
             }
 
-            //Cart Clear
+            // ৬. Cart Clear
             $cart->items()->delete();
             $cart->delete();
 
@@ -83,7 +92,6 @@ class OrderController extends Controller
             return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
         }
     }
-
     public function orderSuccess($order_number)
     {
         $order = Order::where('order_number', $order_number)->with('items.variant.product')->firstOrFail();
@@ -184,12 +192,12 @@ class OrderController extends Controller
     //Main Controller
     public function downloadInvoiceMain($order_number)
     {
-        // ১. অর্ডার ডাটা গেট করা
+        // order Data
         $order = Order::where('order_number', $order_number)
             ->with(['items.variant.product', 'items.variant.size', 'user'])
             ->firstOrFail();
 
-        // ২. শিপিং অ্যাড্রেস ম্যানুয়ালি গেট করা (RelationNotFoundException এড়াতে)
+        //(RelationNotFoundException
         $shipping = \App\Models\ShippingAddress::where('user_id', $order->user_id)
             ->latest()
             ->first();

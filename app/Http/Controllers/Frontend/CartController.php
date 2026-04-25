@@ -141,31 +141,51 @@ class CartController extends Controller
     //cheackout cart-controller method
     public function getCartData()
     {
-        // Login customer cart item data collect
-        $cartItems = Cart::where('user_id', auth()->id())
+        if (!Auth::check()) {
+            return response()->json(['status' => 'error', 'message' => 'Unauthenticated'], 401);
+        }
+
+        // ১. প্রথমে ইউজারের কার্ট খুঁজে বের করুন
+        $cart = Cart::where('user_id', Auth::id())->first();
+
+        if (!$cart) {
+            return response()->json(['status' => 'success', 'items' => [], 'count' => 0]);
+        }
+
+        // ২. কার্টের আইটেমগুলো ধরুন (সঠিক রিলেশনসহ)
+        $cartItems = CartItem::where('cart_id', $cart->id)
             ->with(['variant.product', 'variant.images'])
             ->get();
 
-        // date easier for frontend
         $formattedItems = $cartItems->map(function ($item) {
+            $variant = $item->variant;
+            $product = $variant->product;
+
+            // ইমেজ লজিক
+            $variantImage = $variant->images->first();
+            if ($variantImage) {
+                $imagePath = asset('storage/' . $variantImage->image);
+            } elseif ($product->main_image) {
+                $imagePath = asset('storage/' . $product->main_image);
+            } else {
+                $imagePath = asset('assets/images/placeholder.jpg');
+            }
+
             return [
                 'id'         => $item->id,
                 'variant_id' => $item->variant_id,
                 'quantity'   => $item->quantity,
-                'size'       => $item->size, // যদি আপনার কার্ট টেবিলে সাইজ কলাম থাকে
-                'name'       => $item->variant->product->name,
-                'price'      => $item->variant->sale_price,
-                'image'      => optional($item->variant->images->first())->image
-                    ? asset('storage/' . $item->variant->images->first()->image)
-                    : asset('assets/images/placeholder.jpg'),
+                'size'       => $item->size ?? 'N/A', // সাইজ কলাম কার্ট আইটেমে থাকলে
+                'name'       => $product->name,
+                'price'      => $variant->sale_price,
+                'image'      => $imagePath,
             ];
         });
 
-        //JSON Response Send
         return response()->json([
             'status' => 'success',
             'items'  => $formattedItems,
-            'count'  => $cartItems->count()
+            'count'  => $cartItems->sum('quantity')
         ]);
     }
 }

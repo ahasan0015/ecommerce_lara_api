@@ -26,20 +26,21 @@ class ProductController2 extends Controller
     //Panjabi Controller
     public function panjabi()
     {
-        // Only 'Mens Panjabi' Category product filter
-        $products = Product::whereHas('category', function ($query) {
-            $query->where('name', 'Mens Panjabi');
-        })->with([
-            'category',
-            'variants.size',
-            'images'
-        ])->get();
-
-        // dd($products);
+        $products = Product::select('id', 'name', 'main_image', 'base_price') 
+            ->whereHas('category', function ($query) {
+                $query->where('name', 'Mens Panjabi');
+            })
+            ->with([
+                'variants' => function ($q) {
+                    $q->select('id', 'product_id', 'sale_price', 'size_id');
+                },
+                'variants.size:id,name'
+            ])
+            ->get();
+            // dd($products);
 
         return view('frontend.pages.panjabi', compact('products'));
     }
-
     //women Collection
     public function pakistaniDress()
     {

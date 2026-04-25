@@ -14,6 +14,7 @@ class ShippingAddress extends Model
         'phone',
         'address',
         'city',
+        'thana',
         'postal_code',
         'country'
     ];
