@@ -80,6 +80,5 @@ Route::middleware(['auth'])->group(function () {
     Route::get('/order/invoice/download_shop/{order_number}', [OrderController::class, 'downloadInvoiceShop'])->name('order.invoice.download_shop');
     Route::get('/order/invoice/download_main/{order_number}', [OrderController::class, 'downloadInvoiceMain'])->name('order.invoice.download_main');
     Route::get('/order/invoice/download_invoice/{order_number}', [OrderController::class, 'CustomerInvoice'])->name('order.invoice.download_invoice');
-
 });
 require __DIR__ . '/auth.php';

@@ -23,7 +23,7 @@
                         @if(Auth::check())
                             @forelse($cartItems as $item)
                                 <tr data-id="{{ $item->id }}">
-                                    L
+                                    
                                     <td>
                                         @php
                                             $mainImage = $item->variant->images->where('is_main', 1)->first()

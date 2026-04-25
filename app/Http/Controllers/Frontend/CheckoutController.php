@@ -13,17 +13,17 @@ class CheckoutController extends Controller
     public function index()
     {
         if (!Auth::check()) {
-            return redirect()->route('login')->with('info', 'অর্ডার করতে দয়া করে লগইন করুন।');
+            return redirect()->route('login')->with('info', 'Please Login First');
         }
 
         $cart = Cart::with([
-            'items.variant.product', // cartItems এর বদলে items
+            'items.variant.product', 
             'items.variant.size',
             'items.variant.color',
             'items.variant.images'
         ])->where('user_id', Auth::id())->first();
 
-        // চেক করার সময়ও items ব্যবহার করুন
+        
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->route('dashboard')->with('error', 'Your Cart is Empty');
         }

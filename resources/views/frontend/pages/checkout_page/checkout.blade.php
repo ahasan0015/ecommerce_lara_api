@@ -46,8 +46,9 @@
                         <div class="row g-3">
                             <div class="col-sm-12">
                                 <label class="form-label fw-semibold">Full Name</label>
-                                <input type="text" class="form-control" name="name" value="{{ auth()->user()->name ?? '' }}"
-                                    placeholder="Enter your full name" required>
+                                <input type="text" class="form-control" name="name"
+                                    value="{{ old('name', auth()->user()->name ?? '') }}" placeholder="Enter your full name"
+                                    required>
                             </div>
 
                             <div class="col-12">
@@ -72,7 +73,7 @@
                             <div class="col-12">
                                 <label class="form-label fw-semibold">Full Address</label>
                                 <textarea class="form-control" name="address" rows="3"
-                                    placeholder="House no, Road no, Area..." required></textarea>
+                                    placeholder="House no, Road no, Area..." {{ old('address') }} required></textarea>
                             </div>
 
                             <div class="col-md-6">
@@ -92,7 +93,8 @@
 
                             <div class="col-md-6">
                                 <label class="form-label fw-semibold">Thana / Area</label>
-                                <input type="text" name="thana" class="form-control" placeholder="Enter your area">
+                                <input type="text" name="thana" class="form-control" value="{{ old('thana') }}"
+                                    placeholder="Enter your area">
                             </div>
                         </div>
 
@@ -165,13 +167,22 @@
                                     <div class="ms-3">
                                         <h6 class="my-0 small fw-bold">{{ Str::limit($item->variant->product->name, 20) }}</h6>
                                         <small class="text-muted d-block">Size:
-                                            {{ $item->variant->size->name ?? 'N/A' }}</small>
+                                            {{ $item->variant->size->name ?? 'N/A' }}
+                                        </small>
+                                        <small
+                                            class="d-block {{ $item->variant->stock > 0 ? 'text-success' : 'text-danger' }} fw-bold"
+                                            style="font-size: 0.75rem;">
+                                            Availability: {{ $item->variant->stock }} left in stock
+                                        </small>
                                         <div class="d-flex align-items-center mt-1">
                                             <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 update-qty"
                                                 data-id="{{ $item->id }}" data-action="decrease">-</button>
                                             <span class="mx-2 fw-bold text-primary">{{ $item->quantity }}</span>
                                             <button type="button" class="btn btn-sm btn-outline-secondary py-0 px-2 update-qty"
-                                                data-id="{{ $item->id }}" data-action="increase">+</button>
+                                                data-id="{{ $item->id }}" data-action="increase" {{ ($item->variant && $item->quantity >= $item->variant->stock) ? 'disabled' : '' }}>
+                                                +
+                                            </button>
+
                                         </div>
                                     </div>
                                 </div>
@@ -237,7 +248,7 @@
                 let city = $('#city_select').val();
                 let shipping = 0;
 
-                
+
                 let subtotal = parseInt($('#subtotal_val').text().replace(/,/g, ''));
 
                 if (city === 'Dhaka') {
@@ -246,7 +257,6 @@
                     shipping = 150;
                 }
 
-                
                 $('#shipping_fee_display').text(shipping);
                 let total = subtotal + shipping;
                 $('#total_val').text(total.toLocaleString());

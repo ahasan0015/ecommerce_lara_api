@@ -28,7 +28,8 @@ class OrderController extends Controller
             'phone.regex' => 'Please provide a valid 11-digit mobile number',
         ]);
 
-        $cart = Cart::where('user_id', Auth::id())->with('items.variant')->first();
+        $cart = Cart::where('user_id', Auth::id())->with('items.variant.product')->first();
+
         if (!$cart || $cart->items->count() === 0) {
             return redirect()->back()->with('error', 'Your cart is empty!');
         }
@@ -36,8 +37,15 @@ class OrderController extends Controller
         try {
             DB::beginTransaction();
 
-            $shippingCharge = ($request->city === 'Dhaka') ? 60 : 150;
+            foreach ($cart->items as $item) {
+                $variant = $item->variant;
+                if ($variant->stock < $item->quantity) {
+                    
+                    return redirect()->back()->with('error', "Sorry, {$variant->product->name} is out of stock or quantity not available.");
+                }
+            }
 
+            $shippingCharge = ($request->city === 'Dhaka') ? 60 : 150;
             $cleanPhone = preg_replace('/^(?:\+88|88)/', '', $request->phone);
 
             // ২. Shipping Address Save
@@ -52,11 +60,10 @@ class OrderController extends Controller
                 'country'     => 'Bangladesh',
             ]);
 
-
             $subtotal = $cart->items->sum(fn($item) => $item->variant->sale_price * $item->quantity);
-            $total = $subtotal + $shippingCharge; // এখানে চার্জ যোগ হবে
+            $total = $subtotal + $shippingCharge;
 
-            // ৪. Order Create
+            // ৩. Order Create
             $order = Order::create([
                 'user_id'           => Auth::id(),
                 'order_status_id'   => 1,
@@ -69,7 +76,7 @@ class OrderController extends Controller
                 'payment_method'    => $request->payment_method,
             ]);
 
-            // ৫. Order Item Loop
+            // ৪. Order Item Loop & Stock Update
             foreach ($cart->items as $item) {
                 OrderItem::create([
                     'order_id'           => $order->id,
@@ -78,9 +85,12 @@ class OrderController extends Controller
                     'quantity'           => $item->quantity,
                     'price'              => $item->variant->sale_price,
                 ]);
+
+                // গুরুত্বপূর্ণ: স্টক কমিয়ে দেওয়া
+                $item->variant->decrement('stock', $item->quantity);
             }
 
-            // ৬. Cart Clear
+            // ৫. Cart Clear
             $cart->items()->delete();
             $cart->delete();
 

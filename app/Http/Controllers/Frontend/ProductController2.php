@@ -26,7 +26,7 @@ class ProductController2 extends Controller
     //Panjabi Controller
     public function panjabi()
     {
-        $products = Product::select('id', 'name', 'main_image', 'base_price') 
+        $products = Product::select('id', 'name', 'main_image', 'base_price')
             ->whereHas('category', function ($query) {
                 $query->where('name', 'Mens Panjabi');
             })
@@ -37,7 +37,7 @@ class ProductController2 extends Controller
                 'variants.size:id,name'
             ])
             ->get();
-            // dd($products);
+        // dd($products);
 
         return view('frontend.pages.panjabi', compact('products'));
     }
@@ -60,7 +60,8 @@ class ProductController2 extends Controller
     //Product Details
     public function productDetails($id)
     {
-        $product = Product::with(['variants.images', 'variants.size'])->findOrFail($id);
+        // images রিলেশনটি product_images টেবিল থেকে ডাটা নিয়ে আসবে
+        $product = Product::with(['images', 'variants.size', 'variants.color'])->findOrFail($id);
         return view('frontend.pages.product.product_details', compact('product'));
     }
 }
