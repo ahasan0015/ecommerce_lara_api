@@ -60,7 +60,7 @@ class ProductController2 extends Controller
     //Product Details
     public function productDetails($id)
     {
-        // images রিলেশনটি product_images টেবিল থেকে ডাটা নিয়ে আসবে
+        
         $product = Product::with(['images', 'variants.size', 'variants.color'])->findOrFail($id);
         return view('frontend.pages.product.product_details', compact('product'));
     }

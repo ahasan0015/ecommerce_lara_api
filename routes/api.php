@@ -7,12 +7,14 @@ use App\Http\Controllers\Api\BrandController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\ColorController;
 use App\Http\Controllers\Api\OrderControllerAdmin;
+use App\Http\Controllers\Api\OrderStatusController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\ProductStatusController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SizeController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\Api\ProductVariantController;
+
 
 /*
 |--------------------------------------------------------------------------
@@ -23,6 +25,7 @@ use App\Http\Controllers\Api\ProductVariantController;
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/admin/login', [AuthController::class, 'login']);
 
+
 /*
 |--------------------------------------------------------------------------
 | Protected Routes (Sanctum)
@@ -30,29 +33,30 @@ Route::post('/admin/login', [AuthController::class, 'login']);
 */
 Route::middleware('auth:sanctum')->group(function () {
 
-    // Auth & User Management
+    // 1. Auth & User Profile
     Route::get('/user', [AuthController::class, 'user']);
     Route::post('/logout', [AuthController::class, 'logout']);
 
+    // 2. User & Role Management
     Route::apiResource('users', UserController::class);
     Route::get('/roles', [RoleController::class, 'index']);
 
-    // Inventory & Catalog
+    // 3. Catalog Management (Categories, Brands, Colors, Sizes)
     Route::apiResource('categories', CategoryController::class);
     Route::apiResource('brands', BrandController::class);
-    // Trash Product
-    Route::get('products/trash', [ProductController::class, 'trashList']);
-    // Restore Product
-    Route::post('products/{id}/restore', [ProductController::class, 'restore']);
-    //Parmanent delete (Hard Delete)
-    Route::delete('products/{id}/force-delete', [ProductController::class, 'forceDelete']);
-    Route::apiResource('products', ProductController::class);
     Route::apiResource('colors', ColorController::class);
     Route::apiResource('sizes', SizeController::class);
-
     Route::get('product-statuses', [ProductStatusController::class, 'index']);
 
-    // Product Variant Routes
+    // 4. Product Management (Including Trash & Restore)
+    Route::prefix('products')->group(function () {
+        Route::get('/trash', [ProductController::class, 'trashList']);
+        Route::post('/{id}/restore', [ProductController::class, 'restore']);
+        Route::delete('/{id}/force-delete', [ProductController::class, 'forceDelete']);
+    });
+    Route::apiResource('products', ProductController::class);
+
+    // 5. Product Variant Management
     Route::prefix('variants')->group(function () {
         Route::get('/product/{id}', [ProductVariantController::class, 'getProductVariants']);
         Route::post('/bulk-store', [ProductVariantController::class, 'storeBulkVariants']);
@@ -60,22 +64,13 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/{id}', [ProductVariantController::class, 'destroy']);
     });
 
-    /*
-|--------------------------------------------------------------------------
-| Admin Order Management Routes
-|--------------------------------------------------------------------------
-*/
-
-    // protected admin route
+    // 6. Admin Order Management
     Route::prefix('admin')->group(function () {
-
-        // To collect all orders
-
-        //Each Order Details
         Route::get('/orders', [OrderControllerAdmin::class, 'index']);
         Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);
-
-        // order update
         Route::put('/orders/{id}/status', [OrderControllerAdmin::class, 'updateStatus']);
+
+        // ডাইনামিক স্ট্যাটাস লিস্ট এখানে রাখা হয়েছে (api/admin/order-statuses)
+        Route::get('/order-statuses', [OrderStatusController::class, 'index']);
     });
 });

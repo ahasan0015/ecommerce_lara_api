@@ -18,37 +18,46 @@ class OrderController extends Controller
 
     public function store(Request $request)
     {
+        // Validation
         $request->validate([
-            'name'    => 'required|string',
+            'name'    => 'required|string|max:255',
             'phone'   => ['required', 'regex:/^(?:\+88|88)?(01[3-9]\d{8})$/'],
-            'address' => 'required',
-            'city'    => 'required',
-            'thana'   => 'required',
+            'address' => 'required|string',
+            'city'    => 'required|string',
+            'thana'   => 'required|string',
+            'payment_method' => 'required'
         ], [
-            'phone.regex' => 'Please provide a valid 11-digit mobile number',
+            'phone.regex' => 'Please input 11 digit phone Number',
         ]);
-
-        $cart = Cart::where('user_id', Auth::id())->with('items.variant.product')->first();
-
-        if (!$cart || $cart->items->count() === 0) {
-            return redirect()->back()->with('error', 'Your cart is empty!');
-        }
 
         try {
             DB::beginTransaction();
 
+            // (Row Level Locking)
+
+            $cart = Cart::where('user_id', Auth::id())
+                ->with(['items.variant' => function ($q) {
+                    $q->lockForUpdate();
+                }])
+                ->first();
+
+            if (!$cart || $cart->items->isEmpty()) {
+                return redirect()->back()->with('error', 'Your Cart is Empty');
+            }
+
+            // stock check loop
             foreach ($cart->items as $item) {
-                $variant = $item->variant;
-                if ($variant->stock < $item->quantity) {
-                    
-                    return redirect()->back()->with('error', "Sorry, {$variant->product->name} is out of stock or quantity not available.");
+                if (!$item->variant || $item->variant->stock < $item->quantity) {
+                    DB::rollBack();
+                    return redirect()->back()->with('error', "Sorry, {$item->variant->product->name} পর্যাপ্ত স্টকে নেই।");
                 }
             }
 
+            // Shipping charge and phone number clean
             $shippingCharge = ($request->city === 'Dhaka') ? 60 : 150;
             $cleanPhone = preg_replace('/^(?:\+88|88)/', '', $request->phone);
 
-            // ২. Shipping Address Save
+            //shipping address save
             ShippingAddress::create([
                 'user_id'     => Auth::id(),
                 'name'        => $request->name,
@@ -63,11 +72,11 @@ class OrderController extends Controller
             $subtotal = $cart->items->sum(fn($item) => $item->variant->sale_price * $item->quantity);
             $total = $subtotal + $shippingCharge;
 
-            // ৩. Order Create
+            // Order Create
             $order = Order::create([
                 'user_id'           => Auth::id(),
-                'order_status_id'   => 1,
-                'payment_status_id' => 1,
+                'order_status_id'   => 1, // Pending
+                'payment_status_id' => 1, // Unpaid
                 'order_number'      => 'ORD-' . strtoupper(Str::random(10)),
                 'subtotal'          => $subtotal,
                 'shipping_charge'   => $shippingCharge,
@@ -76,7 +85,7 @@ class OrderController extends Controller
                 'payment_method'    => $request->payment_method,
             ]);
 
-            // ৪. Order Item Loop & Stock Update
+            //item save and stock decrise
             foreach ($cart->items as $item) {
                 OrderItem::create([
                     'order_id'           => $order->id,
@@ -86,20 +95,22 @@ class OrderController extends Controller
                     'price'              => $item->variant->sale_price,
                 ]);
 
-                // গুরুত্বপূর্ণ: স্টক কমিয়ে দেওয়া
+                //stock decrement
                 $item->variant->decrement('stock', $item->quantity);
             }
 
-            // ৫. Cart Clear
+            //cart clear
             $cart->items()->delete();
             $cart->delete();
 
             DB::commit();
+
             return redirect()->route('order.success', $order->order_number)
-                ->with('success', 'Your order has been successfully received!');
+                ->with('success', 'Your order is successfull');
         } catch (\Exception $e) {
             DB::rollBack();
-            return redirect()->back()->with('error', 'Something went wrong: ' . $e->getMessage());
+            Log::error("Order Error: " . $e->getMessage());
+            return redirect()->back()->with('error', 'Sorry, Something Error. Try Again');
         }
     }
     public function orderSuccess($order_number)

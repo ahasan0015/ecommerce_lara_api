@@ -11,7 +11,7 @@ class OrderStatus extends Model
 
     protected $fillable = ['name'];
 
-    // এই স্ট্যাটাসের অধীনে কতগুলো অর্ডার আছে তা দেখতে চাইলে
+  
     public function orders()
     {
         return $this->hasMany(Order::class, 'order_status_id');

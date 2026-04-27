@@ -53,55 +53,58 @@ class OrderControllerAdmin extends Controller
 
         try {
             return DB::transaction(function () use ($request, $id) {
-
-                // Load order with items
                 $order = Order::with('items')->findOrFail($id);
-
-                $oldStatus = $order->order_status_id;
+                $oldStatus = (int) $order->order_status_id;
                 $newStatus = (int) $request->order_status_id;
 
+                // if status not change don't change stock
+                if ($oldStatus === $newStatus) {
+                    return response()->json(['message' => 'Status is already the same.'], 200);
+                }
+
                 /**
-                 * Logic 1: Decrease stock when order is delivered
-                 * If order was not delivered before and now marked as Delivered (4)
+                 * Logic: If orderCancelled stock increment
                  */
                 if ($oldStatus != 4 && $newStatus == 4) {
                     foreach ($order->items as $item) {
                         $variant = ProductVariant::find($item->product_variant_id);
-
-                        if ($variant) {
-                            $variant->decrement('stock', $item->quantity);
-                        }
-                    }
-                }
-
-                /**
-                 * Logic 2: Restore stock when order is cancelled
-                 * If order was delivered (4) but now changed to Cancelled (5)
-                 */
-                if ($oldStatus == 4 && $newStatus == 5) {
-                    foreach ($order->items as $item) {
-                        $variant = ProductVariant::find($item->product_variant_id);
-
                         if ($variant) {
                             $variant->increment('stock', $item->quantity);
                         }
                     }
                 }
 
-                // Update order status
+                /**
+                 * Logic: if stock decrement status change to Pending/Processing/Completed
+                 */
+                if ($oldStatus == 4 && $newStatus != 4) {
+                    foreach ($order->items as $item) {
+                        $variant = ProductVariant::find($item->product_variant_id);
+                        if ($variant) {
+                            if ($variant->stock >= $item->quantity) {
+                                $variant->decrement('stock', $item->quantity);
+                            } else {
+                                //if not stock available rollback
+                                throw new \Exception("Product not in stock");
+                            }
+                        }
+                    }
+                }
+
+                // Order Status
                 $order->order_status_id = $newStatus;
                 $order->save();
 
                 return response()->json([
                     'status' => 'success',
-                    'message' => $this->getStatusMessage($newStatus),
+                    'message' => 'Status updated successfully to ' . $order->status->name,
                     'new_status_id' => $order->order_status_id
                 ], 200);
             });
         } catch (\Exception $e) {
             return response()->json([
                 'status' => 'error',
-                'message' => 'Process could not be completed: ' . $e->getMessage()
+                'message' => 'Process failed: ' . $e->getMessage()
             ], 500);
         }
     }
