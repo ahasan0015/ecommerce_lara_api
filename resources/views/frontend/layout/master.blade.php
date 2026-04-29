@@ -54,33 +54,30 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // এটি master.blade.php তে থাকবে
+        
         document.addEventListener('DOMContentLoaded', function () {
-            updateCartBadge(); // পেজ লোড হলেই ব্যাজ আপডেট হবে
+            updateCartBadge(); 
         });
 
-        function updateCartBadge(newCount = null) {
-            const cartBadge = document.getElementById('cart-count');
-
-            if (!cartBadge) {
-                console.error("Cart badge element not found! Make sure id='cart-count' exists in navbar.");
-                return;
-            }
-
-            //login user AJAX
-            if (newCount !== null) {
-                cartBadge.innerText = newCount;
-                return;
-            }
-
-            // default loading
+        function updateCartBadge() {
             const isLoggedIn = {{ Auth::check() ? 'true' : 'false' }};
+            let totalItems = 0;
+
             if (!isLoggedIn) {
+                // guest LocalStorage 
                 let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
-                let totalCount = cart.reduce((total, item) => total + parseInt(item.quantity), 0);
-                cartBadge.innerText = totalCount;
+                totalItems = cart.reduce((sum, item) => sum + parseInt(item.quantity), 0);
+
+                // desktop and mobile badge update
+                const desktopBadge = document.getElementById('cart-count');
+                const mobileBadge = document.getElementById('cart-count-mobile');
+
+                if (desktopBadge) desktopBadge.innerText = totalItems;
+                if (mobileBadge) mobileBadge.innerText = totalItems;
             }
         }
+
+        document.addEventListener('DOMContentLoaded', updateCartBadge);
     </script>
 
     @if(session('success'))

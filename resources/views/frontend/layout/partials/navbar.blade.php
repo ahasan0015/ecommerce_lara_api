@@ -50,8 +50,13 @@
                 <li>
                     <a class="btn btn-outline-light position-relative" href="{{ route('cart.index') }}">
                         🛒
-                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
-                            {{ Auth::check() ? (Auth::user()->cart?->items->sum('quantity') ?? 0) : 0 }}
+                        <span id="cart-count"
+                            class="badge bg-danger position-absolute top-0 start-100 translate-middle">
+                            @if(Auth::check())
+                                {{ Auth::user()->cart?->items->sum('quantity') ?? 0 }}
+                            @else
+                                0
+                            @endif
                         </span>
                     </a>
                 </li>
@@ -185,7 +190,7 @@
     <a href="{{ route('cart.index') }}" class="position-relative">
         <div>🛒</div>
         <small>Cart</small>
-        <span class="cart-badge">
+        <span id="cart-count-mobile" class="cart-badge">
             {{ Auth::check() ? (Auth::user()->cart?->items->sum('quantity') ?? 0) : 0 }}
         </span>
     </a>
