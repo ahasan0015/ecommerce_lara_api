@@ -1,40 +1,191 @@
-/* Gradient background */
+/* ==========================================================================
+    (General & Desktop)
+   ========================================================================== */
+
 .navbar-gradient {
-  background: linear-gradient(90deg, #ff6b6b, #f94d6a);
+    background: linear-gradient(45deg, #111, #333);
 }
 
-/* Hover dropdown for desktop */
+
+
 @media (min-width: 992px) {
-  .navbar .dropdown:hover .dropdown-menu {
+    
+    .navbar-nav .dropdown-menu-end {
+        position: absolute !important; 
+        display: none; 
+        right: 0;
+        left: auto;
+        margin-top: 0; 
+        z-index: 1050;
+    }
+
+    
+    .nav-item.dropdown:hover .dropdown-menu-end {
+        display: block !important;
+    }
+
+    
+    body {
+        overflow-x: hidden;
+    }
+    
+    
+    .dropdown-menu {
+        border: none !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        background-color: #ed9898; 
+    }
+} 
+
+
+body {
+    padding-bottom: 75px;
+}
+
+/* ==========================================================================
+   2. moblile top nav (Category Scroll)
+   ========================================================================== */
+
+.mobile-top-navbar {
+    background: #fff;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 1000;
+}
+
+/* categori scroll in one line */
+.category-scroll {
+    display: flex;
+    flex-wrap: nowrap;       
+    overflow-x: auto;        
+    white-space: nowrap;
+    padding: 10px 15px;
+    gap: 20px;
+    border-bottom: 1px solid #f8f8f8;
+    -webkit-overflow-scrolling: touch; 
+}
+
+/*  */
+.category-scroll::-webkit-scrollbar {
+    display: none;
+}
+
+.category-item {
+    flex: 0 0 auto;         
+    font-weight: 500;
+    color: #666;
+    cursor: pointer;
+    padding-bottom: 8px;
+    font-size: 14px;
+    border-bottom: 2px solid transparent;
+    transition: all 0.3s ease;
+}
+
+
+.category-item.active {
+    color: #000;
+    font-weight: 700;
+    border-bottom: 2px solid #000;
+}
+
+/* ==========================================================================
+   (Submenu Circle)
+   ========================================================================== */
+
+.submenu-container {
+    padding: 15px 10px;
+    background: #fff;
+}
+
+.submenu-content {
+    display: none; 
+}
+
+
+.submenu-content.active {
+    display: flex;
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 15px;
+    padding-bottom: 5px;
+}
+
+.submenu-content::-webkit-scrollbar {
+    display: none;
+}
+
+.circle-item {
+    text-align: center;
+    text-decoration: none;
+    color: #333;
+    flex: 0 0 auto;
+    width: 70px;
+}
+
+.circle-item img {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid #f0f0f0;
+    margin-bottom: 5px;
+    background: #f9f9f9;
+}
+
+.circle-item span {
     display: block;
-    margin-top: 0;
-    transition: all 0.3s ease;
-  }
-
-  .navbar .dropdown-menu {
-    transition: all 0.3s ease;
-  }
+    font-size: 11px;
+    font-weight: 500;
+    line-height: 1.2;
 }
 
-/* Dropdown item hover effect */
-.dropdown-item:hover {
-  background-color: #ff6b6b;
-  color: white !important;
+/* ==========================================================================
+   mobile  (Bottom Navigation)
+   ========================================================================== */
+
+.mobile-bottom-navbar {
+    position: fixed;
+    bottom: 0;
+    width: 100%;
+    background: #fff;
+    display: flex;
+    justify-content: space-around;
+    padding: 10px 0;
+    border-top: 1px solid #eee;
+    z-index: 1000;
+    box-shadow: 0 -2px 10px rgba(0,0,0,0.05);
 }
 
-/* Nav-link hover */
-.navbar .nav-link:hover {
-  color: #ffe3e3 !important;
-  transition: 0.3s;
-}
-.navbar-gradient {
-  background: linear-gradient(90deg, #ff416c, #ff4b2b);
-}
-
-.navbar .nav-link:hover {
-  opacity: 0.85;
+.mobile-bottom-navbar a {
+    text-align: center;
+    text-decoration: none;
+    color: #666;
+    font-size: 11px;
+    flex: 1;
+    position: relative;
 }
 
-.dropdown-menu {
-  border-radius: 10px;
+.mobile-bottom-navbar a div {
+    font-size: 20px;
+    margin-bottom: 2px;
+}
+
+/* cart badge */
+.cart-badge {
+    position: absolute;
+    top: -5px;
+    right: 20%;
+    background: #ff3b30;
+    color: #fff;
+    font-size: 10px;
+    min-width: 16px;
+    height: 16px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    border: 2px solid #fff;
+    padding: 0 4px;
 }

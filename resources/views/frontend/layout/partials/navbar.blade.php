@@ -1,23 +1,19 @@
-<nav class="navbar navbar-expand-lg shadow-sm navbar-gradient">
+{{-- ================= DESKTOP NAVBAR ================= --}}
+<nav class="navbar navbar-expand-lg navbar-dark navbar-gradient shadow-sm d-none d-lg-flex">
     <div class="container-fluid">
 
-        <a class="navbar-brand fw-bold text-white" href="{{ url('/') }}">
+        <a class="navbar-brand fw-bold" href="{{ url('/') }}">
             Ayesha Fashion
         </a>
 
-        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#fashionNavbar">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+        <div class="collapse navbar-collapse">
 
-        <div class="collapse navbar-collapse" id="fashionNavbar">
+            {{-- LEFT MENU --}}
+            <ul class="navbar-nav me-auto">
 
-            <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-
+                {{-- MEN --}}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
-                        data-bs-toggle="dropdown">
-                        Men
-                    </a>
+                    <a class="nav-link dropdown-toggle" href="#">Men</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ route('tshirts.index') }}">T-Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ route('shirts.page') }}">Shirts</a></li>
@@ -26,49 +22,43 @@
                     </ul>
                 </li>
 
+                {{-- WOMEN --}}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
-                        data-bs-toggle="dropdown">
-                        Women
-                    </a>
+                    <a class="nav-link dropdown-toggle" href="#">Women</a>
                     <ul class="dropdown-menu">
-                        <li><a class="dropdown-item" href="{{ route('pakistani.dress') }}">Pakistani Dresses</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/women/tops') }}">Tops</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/women/pants') }}">Pants</a></li>
-                        <li><a class="dropdown-item" href="{{ url('/women/shoes') }}">Shoes</a></li>
+                        <li><a class="dropdown-item" href="{{ route('pakistani.dress') }}">Pakistani Dress</a></li>
                     </ul>
                 </li>
 
                 <li class="nav-item">
-                    <a class="nav-link text-white fw-semibold" href="{{ url('/new-arrivals') }}">
-                        New Arrivals
-                    </a>
+                    <a class="nav-link" href="{{ url('/new-arrivals') }}">New Arrivals</a>
                 </li>
+
             </ul>
 
-            <ul class="navbar-nav ms-auto align-items-lg-center gap-lg-3">
+            {{-- RIGHT --}}
+            <ul class="navbar-nav ms-auto align-items-center gap-2">
 
-                <li class="nav-item">
-                    <form class="d-flex" action="{{ url('/search') }}" method="GET">
-                        <input class="form-control form-control-sm me-2" type="search" name="query"
-                            placeholder="Search products" />
+                {{-- SEARCH --}}
+                <li>
+                    <form class="d-flex" action="{{ url('/search') }}">
+                        <input class="form-control form-control-sm" name="query" placeholder="Search">
                     </form>
                 </li>
 
-                <li class="nav-item">
-                    <a class="nav-link btn btn-outline-light position-relative" href="{{ route('cart.index') }}">
-                        🛒 Cart
-                        <span class="badge bg-danger" id="cart-count">
+                {{-- CART --}}
+                <li>
+                    <a class="btn btn-outline-light position-relative" href="{{ route('cart.index') }}">
+                        🛒
+                        <span class="badge bg-danger position-absolute top-0 start-100 translate-middle">
                             {{ Auth::check() ? (Auth::user()->cart?->items->sum('quantity') ?? 0) : 0 }}
                         </span>
                     </a>
                 </li>
 
+                {{-- ACCOUNT --}}
                 <li class="nav-item dropdown">
-                    <a class="nav-link dropdown-toggle text-white fw-semibold" href="#" role="button"
-                        data-bs-toggle="dropdown">
-                        👤 My Account
-                    </a>
+                    <a class="nav-link dropdown-toggle" href="#">👤</a>
                     <ul class="dropdown-menu dropdown-menu-end">
                         @guest
                             <li><a class="dropdown-item" href="{{ route('login') }}">Login</a></li>
@@ -79,9 +69,9 @@
                                 <hr class="dropdown-divider">
                             </li>
                             <li>
-                                <form action="{{ route('logout') }}" method="POST">
+                                <form method="POST" action="{{ route('logout') }}">
                                     @csrf
-                                    <button type="submit" class="dropdown-item text-danger">Logout</button>
+                                    <button class="dropdown-item text-danger">Logout</button>
                                 </form>
                             </li>
                         @endguest
@@ -92,3 +82,156 @@
         </div>
     </div>
 </nav>
+
+
+{{-- ================= MOBILE TOP ================= --}}
+<nav class="mobile-top-navbar d-lg-none">
+
+    {{-- TOP BAR --}}
+    <div class="d-flex justify-content-between align-items-center px-3 py-2">
+        <div class="fw-bold fs-5">Ayesha Fashion</div>
+        <a href="{{ url('/search') }}">🔍</a>
+    </div>
+
+    {{-- HORIZONTAL CATEGORY --}}
+    <div class="category-scroll">
+
+        <div class="category-item active" onclick="openTab('men', this)">Mens</div>
+        <div class="category-item" onclick="openTab('women', this)">Womens</div>
+        <div class="category-item" onclick="openTab('kids', this)">Kids</div>
+
+    </div>
+
+    {{-- SUBMENU AREA --}}
+    <div class="submenu-container">
+
+        {{-- MEN --}}
+        <div class="submenu-content" id="men">
+
+            <a href="{{ route('tshirts.index') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/men-tshirt.avif') }}" alt="">
+                <span>T-Shirts</span>
+            </a>
+
+            <a href="{{ route('shirts.page') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/mens_casual_shirt.avif') }}" alt="">
+                <span>Shirts</span>
+            </a>
+
+            <a href="{{ route('pant.page') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/men_jeans.avif') }}" alt="">
+                <span>Pants</span>
+            </a>
+
+            <a href="{{ route('panjabi.index') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/mens_panjabi.avif') }}" alt="Panjabi">
+                <span>Panjabi</span>
+            </a>
+        </div>
+
+        {{-- WOMEN --}}
+        <div class="submenu-content" id="women">
+            {{-- <a href="{{ route('pakistani.dress') }}">Pakistani Dress</a> --}}
+            <a href="{{ route('pakistani.dress') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/men-tshirt.avif') }}" alt="">
+                <span>Pakistani Dress</span>
+            </a>
+
+            <a href="{{ route('shirts.page') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/mens_casual_shirt.avif') }}" alt="">
+                <span>Kamiz</span>
+            </a>
+
+            <a href="{{ route('pant.page') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/men_jeans.avif') }}" alt="">
+                <span>Jackets</span>
+            </a>
+
+            <a href="{{ route('panjabi.index') }}" class="circle-item">
+                <img src="{{ asset('assets/images/category/mens_panjabi.avif') }}" alt="Panjabi">
+                <span>Kurti</span>
+            </a>
+        </div>
+
+        {{-- KIDS --}}
+        <div class="submenu-content" id="kids">
+            <a href="#">Boys</a>
+            <a href="#">Girls</a>
+        </div>
+
+    </div>
+
+</nav>
+
+
+{{-- ================= MOBILE BOTTOM ================= --}}
+<nav class="mobile-bottom-navbar d-lg-none">
+
+    <a href="{{ url('/') }}">
+        <div>🏠</div>
+        <small>Home</small>
+    </a>
+
+    <a href="#">
+        <div>📂</div>
+        <small>Category</small>
+    </a>
+
+    <a href="#">
+        <div>🔥</div>
+        <small>Deals</small>
+    </a>
+
+    <a href="{{ route('cart.index') }}" class="position-relative">
+        <div>🛒</div>
+        <small>Cart</small>
+        <span class="cart-badge">
+            {{ Auth::check() ? (Auth::user()->cart?->items->sum('quantity') ?? 0) : 0 }}
+        </span>
+    </a>
+
+    <a href="{{ url('/profile') }}">
+        <div>👤</div>
+        <small>Account</small>
+    </a>
+
+</nav>
+
+<script>
+    // পেজ লোড হওয়ার পর চেক করবে আগে কোন ট্যাব সিলেক্ট করা ছিল
+    document.addEventListener("DOMContentLoaded", function () {
+        // localStorage থেকে সেভ করা আইডি আনবে, না থাকলে default 'men' নিবে
+        const activeTabId = localStorage.getItem('activeMobileTab') || 'men';
+
+        // ওই আইডির জন্য ট্যাব এলিমেন্টটি খুঁজে বের করবে
+        const activeTabElement = document.querySelector(`.category-item[onclick*="'${activeTabId}'"]`);
+
+        if (activeTabElement) {
+            openTab(activeTabId, activeTabElement, false);
+        }
+    });
+
+    function openTab(tabId, element, shouldSave = true) {
+        // সব ট্যাব থেকে active ক্লাস রিমুভ করা
+        document.querySelectorAll('.category-item').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        // সব সাবমেনু কন্টেন্ট হাইড করা
+        document.querySelectorAll('.submenu-content').forEach(el => {
+            el.classList.remove('active');
+        });
+
+        // ক্লিক করা ট্যাব এবং তার কন্টেন্ট শো করা
+        element.classList.add('active');
+        const targetContent = document.getElementById(tabId);
+        if (targetContent) {
+            targetContent.classList.add('active');
+        }
+
+        // ব্রাউজারের মেমরিতে সেভ করে রাখা যাতে রিফ্রেশ দিলেও না যায়
+        if (shouldSave) {
+            localStorage.setItem('activeMobileTab', tabId);
+        }
+    }
+</script>

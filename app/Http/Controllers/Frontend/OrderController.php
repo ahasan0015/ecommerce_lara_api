@@ -109,7 +109,7 @@ class OrderController extends Controller
                 ->with('success', 'Your order is successfull');
         } catch (\Exception $e) {
             DB::rollBack();
-            Log::error("Order Error: " . $e->getMessage());
+            // Log::error("Order Error: " . $e->getMessage());
             return redirect()->back()->with('error', 'Sorry, Something Error. Try Again');
         }
     }
@@ -162,11 +162,11 @@ class OrderController extends Controller
         $url = 'https://chart.googleapis.com/chart?chs=150x150&cht=qr&chl=' . urlencode($qrData);
 
         try {
-            // ইমেজটিকে ডাটাতে কনভার্ট করা হচ্ছে যাতে dompdf সহজে রিড করতে পারে
+            //  dompdf 
             $imageData = base64_encode(file_get_contents($url));
             $qrCode = 'data:image/png;base64,' . $imageData;
         } catch (\Exception $e) {
-            // যদি ইন্টারনেট বা এপিআই এর কারণে ইমেজ না আসে তবে নাল থাকবে
+            
             $qrCode = null;
         }
 
@@ -175,7 +175,7 @@ class OrderController extends Controller
             ->setOptions([
                 'isHtml5ParserEnabled' => true,
                 'isRemoteEnabled' => true,
-                'defaultFont' => 'DejaVu Sans', // ৳ সিম্বল সাপোর্ট করার জন্য বেস্ট
+                'defaultFont' => 'DejaVu Sans', // ৳ 
             ]);
 
         return $pdf->stream('Invoice-' . $order->order_number . '.pdf');
@@ -219,7 +219,7 @@ class OrderController extends Controller
             ->firstOrFail();
 
         //(RelationNotFoundException
-        $shipping = \App\Models\ShippingAddress::where('user_id', $order->user_id)
+        $shipping = ShippingAddress::where('user_id', $order->user_id)
             ->latest()
             ->first();
 

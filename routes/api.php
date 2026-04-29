@@ -70,7 +70,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/orders/{id}', [OrderControllerAdmin::class, 'show']);
         Route::put('/orders/{id}/status', [OrderControllerAdmin::class, 'updateStatus']);
 
-        // ডাইনামিক স্ট্যাটাস লিস্ট এখানে রাখা হয়েছে (api/admin/order-statuses)
+        // (api/admin/order-statuses)
         Route::get('/order-statuses', [OrderStatusController::class, 'index']);
     });
 });
