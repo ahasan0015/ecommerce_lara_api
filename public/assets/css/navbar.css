@@ -9,33 +9,23 @@
 
 
 @media (min-width: 992px) {
-    
-    .navbar-nav .dropdown-menu-end {
-        position: absolute !important; 
-        display: none; 
-        right: 0;
-        left: auto;
-        margin-top: 0; 
-        z-index: 1050;
-    }
-
-    
-    .nav-item.dropdown:hover .dropdown-menu-end {
+   
+    .navbar .nav-item.dropdown:hover > .dropdown-menu {
         display: block !important;
+        margin-top: 0; 
     }
 
-    
+    .navbar-nav .dropdown-menu-end {
+        right: 0 !important;
+        left: auto !important;
+        position: absolute !important;
+    }
+
+
     body {
         overflow-x: hidden;
     }
-    
-    
-    .dropdown-menu {
-        border: none !important;
-        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-        background-color: #ed9898; 
-    }
-} 
+}
 
 
 body {
