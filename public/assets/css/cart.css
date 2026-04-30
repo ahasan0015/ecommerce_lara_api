@@ -1,0 +1,111 @@
+
+        :root {
+            --primary-color: #212529;
+            --accent-danger: #dc3545;
+            --bg-light: #f8f9fa;
+            --border-radius: 12px;
+        }
+
+        .cart-table-wrapper {
+            background: #fff;
+            border-radius: var(--border-radius);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.05);
+        }
+
+        #cart-table thead {
+            background-color: var(--primary-color);
+            color: #fff;
+        }
+
+        #cart-table thead th {
+            border: none;
+            padding: 18px;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.5px;
+        }
+
+        .product-name {
+            color: var(--primary-color);
+            transition: color 0.3s;
+            text-decoration: none;
+        }
+
+        .product-name:hover {
+            color: var(--accent-danger);
+        }
+
+        .qty-input {
+            max-width: 45px;
+            font-weight: bold;
+            border-left: none;
+            border-right: none;
+        }
+
+        .summary-card {
+            border-radius: var(--border-radius);
+            background: var(--bg-light);
+            border: 1px solid #eee;
+        }
+
+        /* Professional Mobile Card UI */
+        @media (max-width: 768px) {
+            #cart-table thead {
+                display: none;
+            }
+
+            #cart-table,
+            #cart-table tbody,
+            #cart-table tr,
+            #cart-table td {
+                display: block;
+                width: 100%;
+            }
+
+            #cart-table tr {
+                margin-bottom: 1.5rem;
+                border: 1px solid #eee !important;
+                border-radius: var(--border-radius);
+                padding: 15px;
+                background: #fff;
+                position: relative;
+            }
+
+            #cart-table td {
+                text-align: right;
+                padding: 10px 0;
+                border: none;
+                border-bottom: 1px solid #f8f9fa;
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+            }
+
+            #cart-table td::before {
+                content: attr(data-label);
+                font-weight: 700;
+                text-transform: uppercase;
+                font-size: 0.75rem;
+                color: #888;
+            }
+
+            #cart-table td:first-child {
+                display: block;
+                text-align: center;
+                background: var(--bg-light);
+                margin: -15px -15px 10px -15px;
+                padding: 20px;
+                border-radius: var(--border-radius) var(--border-radius) 0 0;
+            }
+
+            #cart-table td:first-child::before {
+                display: none;
+            }
+
+            #cart-table td:last-child {
+                border: none;
+                padding-top: 15px;
+            }
+        }
+    
