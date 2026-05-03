@@ -16,7 +16,7 @@
                     <a class="nav-link dropdown-toggle" href="#">Men</a>
                     <ul class="dropdown-menu">
                         <li><a class="dropdown-item" href="{{ route('tshirts.index') }}">T-Shirts</a></li>
-                        <li><a class="dropdown-item" href="{{ route('shirts.page') }}">Shirts</a></li>
+                        <li><a class="dropdown-item" href="{{ route('shirts.index') }}">Shirts</a></li>
                         <li><a class="dropdown-item" href="{{ route('pant.page') }}">Pants</a></li>
                         <li><a class="dropdown-item" href="{{ route('panjabi.index') }}">Panjabi</a></li>
                     </ul>
@@ -118,7 +118,7 @@
                 <span>T-Shirts</span>
             </a>
 
-            <a href="{{ route('shirts.page') }}" class="circle-item">
+            <a href="{{ route('shirts.index') }}" class="circle-item">
                 <img src="{{ asset('assets/images/category/mens_casual_shirt.avif') }}" alt="">
                 <span>Shirts</span>
             </a>
@@ -142,7 +142,7 @@
                 <span>Pakistani Dress</span>
             </a>
 
-            <a href="{{ route('shirts.page') }}" class="circle-item">
+            <a href="{{ route('shirts.index') }}" class="circle-item">
                 <img src="{{ asset('assets/images/category/mens_casual_shirt.avif') }}" alt="">
                 <span>Kamiz</span>
             </a>

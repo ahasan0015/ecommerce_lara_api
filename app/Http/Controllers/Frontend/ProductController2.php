@@ -22,6 +22,21 @@ class ProductController2 extends Controller
 
         return view('frontend.pages.tshirts', compact('products'));
     }
+     public function shirt()
+    {
+        $products = Product::whereHas('category', function ($query) {
+            $query->where('name', 'Mens Shirt');
+        })
+            ->with([
+                'category',
+                'variants.size',
+                'images'
+            ])
+            ->get();
+            
+
+        return view('frontend.pages.shirts', compact('products'));
+    }
 
     //Panjabi Controller
     public function panjabi()

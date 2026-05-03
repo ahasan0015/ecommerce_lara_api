@@ -22,15 +22,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
 });
 
-Route::get('/shirts', function () {
-    return view('frontend.pages.shirts');
-})->name('shirts.page');
+// Route::get('/shirts', function () {
+//     return view('frontend.pages.shirts');
+// })->name('shirts.page');
 Route::get('/pant', function () {
     return view('frontend.pages.pant');
 })->name('pant.page');
 
 
 Route::get('/tshirts', [ProductController2::class, 'tshirt'])->name('tshirts.index');
+Route::get('/shirts', [ProductController2::class, 'shirt'])->name('shirts.index');
 Route::get('/men-panjabi', [ProductController2::class, 'panjabi'])->name('panjabi.index');
 Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->name('pakistani.dress');
 
@@ -40,7 +41,7 @@ Route::get('/pakistani-dress', [ProductController2::class, 'pakistaniDress'])->n
 Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
 
 // Login User add to cart for AJAX 
-Route::post('/cart/add-db', [CartController::class, 'addToCart']);
+Route::post('/cart/add-db', [CartController::class, 'addToCart'])->name('cart.add');
 
 Route::post('/cart/sync', [CartController::class, 'syncCart']);
 

@@ -25,7 +25,7 @@
 
                         @foreach($product->images as $img)
                             <div class="carousel-item {{ ($first && $loop->first) ? 'active' : '' }}">
-                                <img src="{{ asset('storage/' . $img->image) }}" class="d-block w-100 product-main-img"
+                                <img src="{{ asset('storage/product/' . $img->image) }}" class="d-block w-100 product-main-img"
                                     alt="Gallery Image">
                             </div>
                         @endforeach
@@ -170,23 +170,82 @@
 
         function handleAddToCart(isBuyNow) {
             const selected = document.querySelector('input[name="productSize"]:checked');
+
             if (!selected) {
-                alert('Please select a size first!');
+                alert('দয়া করে একটি সাইজ সিলেক্ট করুন!');
                 return;
             }
 
             const variantId = selected.getAttribute('data-variant-id');
             const stock = parseInt(selected.getAttribute('data-stock'));
+            const productName = "{{ $product->name }}";
+            const productPrice = parseFloat(selected.getAttribute('data-price'));
+            const productSize = selected.value;
+            const productImage = "{{ asset('storage/' . $product->main_image) }}";
 
             if (stock <= 0) {
-                alert('Sorry, this variant is out of stock!');
+                alert('দুঃখিত, এই প্রোডাক্টটি বর্তমানে স্টকে নেই।');
                 return;
             }
 
-            //AJAX Call
-            console.log("Adding Variant ID:", variantId);
-            alert("Product added to cart!");
-            if (isBuyNow) window.location.href = "{{ route('cart.index') }}";
+            // লারাভেলে লগইন চেক করার জন্য একটি ফ্ল্যাগ (সার্ভার সাইড থেকে আসবে)
+            const isLoggedIn = @json(Auth::check());
+
+            if (isLoggedIn) {
+                // ১. লগইন করা থাকলে সরাসরি AJAX দিয়ে ডাটাবেজে পাঠানো
+                fetch("{{ route('cart.add') }}", {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json",
+                        "X-CSRF-TOKEN": "{{ csrf_token() }}"
+                    },
+                    body: JSON.stringify({
+                        variant_id: variantId,
+                        quantity: 1
+                    })
+                })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.status === 'success') {
+                            alert(data.message);
+                            updateCartBadge(data.total_count);
+                            if (isBuyNow) window.location.href = "{{ route('checkout') }}";
+                        }
+                    });
+
+            } else {
+                // ২. লগইন না করা থাকলে LocalStorage-এ সেভ করা
+                let cart = JSON.parse(localStorage.getItem('guest_cart')) || [];
+
+                let existingItem = cart.find(item => item.variant_id == variantId);
+
+                if (existingItem) {
+                    existingItem.quantity += 1;
+                } else {
+                    cart.push({
+                        variant_id: variantId,
+                        name: productName,
+                        price: productPrice,
+                        size: productSize,
+                        image: productImage,
+                        quantity: 1
+                    });
+                }
+
+                localStorage.setItem('guest_cart', JSON.stringify(cart));
+                alert('পণ্যটি কার্টে যোগ করা হয়েছে (Guest)');
+
+                // নাবার আপডেট (যদি আপনার NAVBAR এ JS ফাংশন থাকে)
+                if (typeof updateNavbarCart === "function") updateNavbarCart();
+
+                if (isBuyNow) window.location.href = "{{ route('checkout') }}";
+            }
+        }
+
+        // কার্ট ব্যাজ আপডেট ফাংশন
+        function updateCartBadge(count) {
+            const badge = document.querySelector('.cart-count-badge'); // আপনার নাবার ব্যাজ ক্লাস অনুযায়ী পরিবর্তন করুন
+            if (badge) badge.innerText = count;
         }
     </script>
 @endsection
